@@ -1,7 +1,9 @@
 import { put } from '@vercel/blob'
 
-export async function uploadImage(file: File): Promise<{ url: string }> {
-  const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '')}`
+export async function uploadImage(file: File | Blob): Promise<{ url: string }> {
+  // Use a proper filename if it's a File object, otherwise generate one
+  const name = file instanceof File ? file.name : 'upload.jpg'
+  const filename = `${Date.now()}-${name.replace(/[^a-zA-Z0-9.-]/g, '')}`
   
   const blob = await put(filename, file, {
     access: 'public',

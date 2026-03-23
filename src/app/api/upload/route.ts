@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { put } from "@vercel/blob"
+import { revalidatePath } from "next/cache"
 
 export async function POST(request: NextRequest) {
   try {
@@ -17,7 +18,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Subject ID required" }, { status: 400 })
     }
 
-    const subject = await prisma.subject.findUnique({ where: { id: subjectId } })
+    const subject = await prisma.subject.findUnique({ 
+      where: { id: subjectId },
+      include: { course: true }
+    })
+
     if (!subject) {
       return NextResponse.json({ error: "Subject not found" }, { status: 404 })
     }
@@ -30,17 +35,15 @@ export async function POST(request: NextRequest) {
 
     for (const file of files) {
       if (!(file instanceof File)) {
-        errors.push("Invalid file")
+        errors.push(`Invalid file: ${typeof file}`)
         continue
       }
 
       try {
         const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`
         
-        const arrayBuffer = await file.arrayBuffer()
-        const buffer = Buffer.from(arrayBuffer)
-        
-        const blob = await put(filename, buffer, {
+        // Vercel blob can handle File objects directly in most environments
+        const blob = await put(filename, file, {
           access: "public",
           contentType: file.type,
         })
@@ -56,7 +59,7 @@ export async function POST(request: NextRequest) {
 
         uploadedImages.push(blob.url)
       } catch (error) {
-        console.error("Error uploading:", error)
+        console.error(`Error uploading ${file.name}:`, error)
         errors.push(`Error uploading ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
@@ -70,7 +73,8 @@ export async function POST(request: NextRequest) {
     console.error("Upload error:", error)
     return NextResponse.json({ 
       error: "Upload failed", 
-      details: error instanceof Error ? error.message : 'Unknown error' 
+      details: error instanceof Error ? error.message : 'Unknown error',
+      originalError: error
     }, { status: 500 })
   }
 }

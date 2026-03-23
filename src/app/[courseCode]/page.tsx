@@ -9,23 +9,30 @@ import { es } from "date-fns/locale"
 
 export default async function CoursePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ courseCode: string }>
+  searchParams: Promise<{ date?: string }>
 }) {
   const { courseCode } = await params
+  const { date: dateParam } = await searchParams
   const course = await getCourseByCode(courseCode)
 
   if (!course) {
     return <div>Curso no encontrado</div>
   }
 
-  const today = new Date()
+  const selectedDate = dateParam ? new Date(dateParam) : new Date()
+  selectedDate.setHours(12, 0, 0, 0)
+  
+  const displayDate = dateParam ? new Date(dateParam) : new Date()
+
   const todayEvents = course.events.filter((e) => {
     const eventDate = new Date(e.date)
     return (
-      eventDate.getDate() === today.getDate() &&
-      eventDate.getMonth() === today.getMonth() &&
-      eventDate.getFullYear() === today.getFullYear()
+      eventDate.getDate() === selectedDate.getDate() &&
+      eventDate.getMonth() === selectedDate.getMonth() &&
+      eventDate.getFullYear() === selectedDate.getFullYear()
     )
   })
 
@@ -50,9 +57,9 @@ export default async function CoursePage({
           {course.name}
         </h1>
         <p className="text-text-muted text-sm">
-          {isToday(today)
+          {isToday(displayDate)
             ? "Hoy"
-            : format(today, "EEEE d 'de' MMMM", { locale: es })}
+            : format(displayDate, "EEEE d 'de' MMMM", { locale: es })}
         </p>
       </div>
 
@@ -129,15 +136,15 @@ export default async function CoursePage({
         <SubjectList subjects={course.subjects} courseCode={courseCode} />
       </div>
 
-      {course.events.filter((e) => new Date(e.date) >= today).length > 0 && (
+      {course.events.filter((e) => new Date(e.date) >= selectedDate).length > 0 && (
         <div>
           <h2 className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">
             <Calendar className="h-4 w-4" />
-            Próximos eventos
+            {dateParam ? "Eventos para este día" : "Próximos eventos"}
           </h2>
           <div className="space-y-2">
             {course.events
-              .filter((e) => new Date(e.date) >= today)
+              .filter((e) => new Date(e.date) >= selectedDate)
               .slice(0, 3)
               .map((event) => {
                 const Icon = eventIcons[event.type]

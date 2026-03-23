@@ -7,6 +7,7 @@ import { CreateEventDialog } from "@/components/event/CreateEventDialog"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import { format } from "date-fns"
+import { es } from "date-fns/locale"
 
 interface Subject {
   id: string
@@ -51,21 +52,25 @@ export function CalendarClient({
 
   useEffect(() => {
     async function fetchData() {
-      const year = currentMonth.getFullYear()
-      const month = currentMonth.getMonth() + 1
+      try {
+        const year = currentMonth.getFullYear()
+        const month = currentMonth.getMonth() + 1
 
-      const [eventsRes, imagesRes] = await Promise.all([
-        fetch(`/api/events?courseId=${courseId}&year=${year}&month=${month}`),
-        fetch(`/api/images/month?courseId=${courseId}&year=${year}&month=${month}`),
-      ])
+        const [eventsRes, imagesRes] = await Promise.all([
+          fetch(`/api/events?courseId=${courseId}&year=${year}&month=${month}`),
+          fetch(`/api/images/month?courseId=${courseId}&year=${year}&month=${month}`),
+        ])
 
-      if (eventsRes.ok) {
-        const data = await eventsRes.json()
-        setEvents(data)
-      }
-      if (imagesRes.ok) {
-        const data = await imagesRes.json()
-        setImages(data)
+        if (eventsRes.ok) {
+          const data = await eventsRes.json()
+          setEvents(data)
+        }
+        if (imagesRes.ok) {
+          const data = await imagesRes.json()
+          setImages(data)
+        }
+      } catch (error) {
+        console.error("Error fetching calendar data:", error)
       }
     }
 
@@ -90,7 +95,13 @@ export function CalendarClient({
       const dateStr = date.toISOString().split("T")[0]
 
       const dayImages = imgs.filter((img) => img.date === dateStr)
-      const dayEvents = evts.filter((evt) => evt.date.split("T")[0] === dateStr)
+      const dayEvents = evts.filter((evt) => {
+        try {
+          return new Date(evt.date).toISOString().split("T")[0] === dateStr
+        } catch (e) {
+          return false
+        }
+      })
 
       return {
         date,
@@ -122,7 +133,13 @@ export function CalendarClient({
       }))
 
     const dayEvents = evts
-      .filter((evt) => evt.date.split("T")[0] === dateStr)
+      .filter((evt) => {
+        try {
+          return new Date(evt.date).toISOString().split("T")[0] === dateStr
+        } catch (e) {
+          return false
+        }
+      })
       .map((evt) => ({
         id: evt.id,
         title: evt.title,
@@ -144,8 +161,8 @@ export function CalendarClient({
           <h1 className="text-xl font-display font-bold text-text-primary">
             Calendario
           </h1>
-          <p className="text-sm text-text-muted">
-            {format(currentMonth, "MMMM yyyy", { locale: require("date-fns/locale/es") })}
+          <p className="text-sm text-text-muted capitalize">
+            {format(currentMonth, "MMMM yyyy", { locale: es })}
           </p>
         </div>
         <Button
