@@ -1,9 +1,12 @@
-import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
-import { BookOpen, Users, Calendar, Camera } from "lucide-react"
+import { BookOpen, Users, Calendar, Camera, Lock } from "lucide-react"
+import { auth, signIn } from "@/auth"
+import { createCourse, joinCourse } from "@/actions/course"
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth()
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-blue-50 via-bg-primary to-bg-primary">
       <div className="container mx-auto px-4 py-8 pb-32">
@@ -25,7 +28,14 @@ export default function Home() {
               <h2 className="text-lg font-semibold mb-4 text-text-primary">
                 Unirse a un curso
               </h2>
-              <form action="/api/course/join" method="POST" className="space-y-4">
+              <form action={async (formData) => {
+                "use server"
+                const res = await joinCourse(formData.get("code") as string)
+                if (res.success) {
+                  // Redirigir al curso
+                  window.location.href = `/${res.course?.code}`
+                }
+              }} className="space-y-4">
                 <div>
                   <label htmlFor="courseCode" className="block text-sm font-medium text-text-secondary mb-1.5">
                     Código del curso
@@ -61,24 +71,41 @@ export default function Home() {
               <h2 className="text-lg font-semibold mb-4 text-text-primary">
                 Crear nuevo curso
               </h2>
-              <form action="/api/course/create" method="POST" className="space-y-4">
-                <div>
-                  <label htmlFor="courseName" className="block text-sm font-medium text-text-secondary mb-1.5">
-                    Nombre del curso
-                  </label>
-                  <input
-                    type="text"
-                    id="courseName"
-                    name="name"
-                    placeholder="Ej: 3° Básico A"
-                    className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors"
-                    required
-                  />
+              {session ? (
+                <form action={createCourse} className="space-y-4">
+                  <div>
+                    <label htmlFor="courseName" className="block text-sm font-medium text-text-secondary mb-1.5">
+                      Nombre del curso
+                    </label>
+                    <input
+                      type="text"
+                      id="courseName"
+                      name="name"
+                      placeholder="Ej: 3° Básico A"
+                      className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" variant="outline" className="w-full border-2 border-accent-primary text-accent-primary hover:bg-blue-50 font-semibold py-3 rounded-xl">
+                    Crear curso
+                  </Button>
+                </form>
+              ) : (
+                <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center">
+                  <Lock className="w-8 h-8 text-slate-400 mx-auto mb-3" />
+                  <p className="text-sm text-text-secondary mb-4">
+                    Debes iniciar sesión para ser el administrador de un curso.
+                  </p>
+                  <form action={async () => {
+                    "use server"
+                    await signIn("google")
+                  }}>
+                    <Button variant="outline" className="w-full rounded-xl gap-2">
+                      Iniciar sesión con Google
+                    </Button>
+                  </form>
                 </div>
-                <Button type="submit" variant="outline" className="w-full border-2 border-accent-primary text-accent-primary hover:bg-blue-50 font-semibold py-3 rounded-xl">
-                  Crear curso
-                </Button>
-              </form>
+              )}
             </CardContent>
           </Card>
         </section>

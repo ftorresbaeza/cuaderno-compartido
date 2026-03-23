@@ -4,12 +4,18 @@ import { prisma } from "@/lib/prisma"
 import { generateCourseCode } from "@/lib/utils"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
+import { auth } from "@/auth"
 
 export async function createCourse(formData: FormData) {
   const name = formData.get("name") as string
   
   if (!name || name.trim().length === 0) {
     return { error: "El nombre del curso es requerido" }
+  }
+
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "Debes iniciar sesión para crear un curso" }
   }
 
   let code = generateCourseCode()
@@ -24,7 +30,16 @@ export async function createCourse(formData: FormData) {
 
   try {
     const course = await prisma.course.create({
-      data: { name: name.trim(), code },
+      data: { 
+        name: name.trim(), 
+        code,
+        members: {
+          create: {
+            userId: session.user.id,
+            role: "OWNER"
+          }
+        }
+      },
     })
     
     revalidatePath("/")
@@ -50,6 +65,25 @@ export async function joinCourse(code: string) {
     return { error: "No se encontró un curso con ese código" }
   }
 
+  // Si está logueado, lo registramos como seguidor automáticamente
+  const session = await auth()
+  if (session?.user?.id) {
+    await prisma.courseMember.upsert({
+      where: {
+        userId_courseId: {
+          userId: session.user.id,
+          courseId: course.id
+        }
+      },
+      update: {}, // No hacemos nada si ya es miembro
+      create: {
+        userId: session.user.id,
+        courseId: course.id,
+        role: "FOLLOWER"
+      }
+    })
+  }
+
   return { success: true, course: { code: course.code, name: course.name } }
 }
 
@@ -70,6 +104,11 @@ export async function getCourseByCode(code: string) {
         include: { subject: true },
         orderBy: { date: "asc" },
         take: 5,
+      },
+      members: {
+        include: {
+          user: true,
+        },
       },
     },
   })
