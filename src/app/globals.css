@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #FDFBF7;
+  --bg-secondary: #F5F1EA;
+  --bg-card: #FFFFFF;
+  --text-primary: #1F1B16;
+  --text-secondary: #6B6459;
+  --text-muted: #A39E94;
+  --accent-primary: #3B82F6;
+  --accent-secondary: #22C55E;
+  --accent-tertiary: #FACC15;
+  --success: #2D9A4E;
+  --danger: #DC2626;
+  --border: #E8E4DD;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-bg-primary text-text-primary;
+    font-family: var(--font-sans), system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .font-display {
+    font-family: var(--font-display), Georgia, serif;
+  }
+}

@@ -1,0 +1,65 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Course {
+  id        String    @id @default(cuid())
+  code      String    @unique
+  name      String
+  createdAt DateTime  @default(now())
+  
+  subjects  Subject[]
+  events    Event[]
+}
+
+model Subject {
+  id        String      @id @default(cuid())
+  name      String
+  courseId  String
+  course    Course      @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime    @default(now())
+  
+  images    ImageNote[]
+  events    Event[]
+  
+  @@index([courseId])
+}
+
+model ImageNote {
+  id         String   @id @default(cuid())
+  url        String
+  publicId   String?
+  subjectId  String
+  subject    Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  date       DateTime @db.Date
+  uploaderId String?
+  createdAt  DateTime @default(now())
+  
+  @@index([subjectId, date])
+  @@index([date])
+}
+
+model Event {
+  id        String    @id @default(cuid())
+  title     String
+  type      EventType
+  date      DateTime  @db.Date
+  courseId  String
+  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  subjectId String?
+  subject   Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  createdAt DateTime  @default(now())
+  
+  @@index([courseId, date])
+}
+
+enum EventType {
+  TASK
+  TEST
+  ACTIVITY
+}
