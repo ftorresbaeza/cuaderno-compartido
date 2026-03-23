@@ -1,11 +1,9 @@
 import Link from "next/link"
 import { getCourseByCode } from "@/actions/course"
 import { SubjectList } from "@/components/subject/SubjectList"
-import { CreateSubjectDialog } from "@/components/subject/CreateSubjectDialog"
-import { CreateEventDialog } from "@/components/event/CreateEventDialog"
+import { CourseDialogs } from "@/components/course/CourseDialogs"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Calendar, Plus, CheckCircle, AlertCircle, Star, Image, Users } from "lucide-react"
+import { Calendar, CheckCircle, AlertCircle, Star, Image, Users } from "lucide-react"
 import { format, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -122,11 +120,10 @@ export default async function CoursePage({
           <h2 className="text-sm font-semibold text-text-secondary">
             Asignaturas
           </h2>
-          <CreateSubjectDialog
-            open={false}
-            onOpenChange={() => {}}
+          <CourseDialogs
             courseId={course.id}
             courseCode={courseCode}
+            subjects={course.subjects.map(s => ({ id: s.id, name: s.name }))}
           />
         </div>
         <SubjectList subjects={course.subjects} courseCode={courseCode} />

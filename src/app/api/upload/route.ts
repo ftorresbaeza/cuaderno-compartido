@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { put } from "@vercel/blob"
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
-    const files = formData.getAll("files") as File[]
+    const files = formData.getAll("files")
     const subjectId = formData.get("subjectId") as string
     const dateStr = formData.get("date") as string
 
@@ -28,12 +29,20 @@ export async function POST(request: NextRequest) {
     const errors: string[] = []
 
     for (const file of files) {
+      if (!(file instanceof File)) {
+        errors.push("Invalid file")
+        continue
+      }
+
       try {
-        const { put } = await import("@vercel/blob")
-        
         const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`
-        const blob = await put(filename, file, {
+        
+        const arrayBuffer = await file.arrayBuffer()
+        const buffer = Buffer.from(arrayBuffer)
+        
+        const blob = await put(filename, buffer, {
           access: "public",
+          contentType: file.type,
         })
 
         await prisma.imageNote.create({
@@ -48,7 +57,7 @@ export async function POST(request: NextRequest) {
         uploadedImages.push(blob.url)
       } catch (error) {
         console.error("Error uploading:", error)
-        errors.push(`Error uploading ${file.name}`)
+        errors.push(`Error uploading ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
     }
 
@@ -59,6 +68,9 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error("Upload error:", error)
-    return NextResponse.json({ error: "Upload failed" }, { status: 500 })
+    return NextResponse.json({ 
+      error: "Upload failed", 
+      details: error instanceof Error ? error.message : 'Unknown error' 
+    }, { status: 500 })
   }
 }

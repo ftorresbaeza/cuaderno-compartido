@@ -136,41 +136,46 @@ export function UploadDropzone({ courseCode, subjects }: UploadDropzoneProps) {
         </Card>
       )}
 
+      <Card>
+        <CardContent className="p-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Asignatura
+            </label>
+            <select
+              value={selectedSubject}
+              onChange={(e) => setSelectedSubject(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors bg-white"
+              disabled={subjects.length === 0}
+            >
+              {subjects.length === 0 ? (
+                <option value="">Crea una asignatura primero</option>
+              ) : (
+                subjects.map((subject) => (
+                  <option key={subject.id} value={subject.id}>
+                    {subject.name}
+                  </option>
+                ))
+              )}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Fecha
+            </label>
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors"
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {files.length > 0 && (
         <>
-          <Card>
-            <CardContent className="p-4 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                  Asignatura
-                </label>
-                <select
-                  value={selectedSubject}
-                  onChange={(e) => setSelectedSubject(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors bg-white"
-                >
-                  {subjects.map((subject) => (
-                    <option key={subject.id} value={subject.id}>
-                      {subject.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-secondary mb-1.5">
-                  Fecha
-                </label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           <Button
             onClick={handleUpload}
             disabled={isUploading || files.length === 0 || !selectedSubject}
