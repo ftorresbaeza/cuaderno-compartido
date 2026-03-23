@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, Users, Calendar, Camera, Lock } from "lucide-react"
 import { auth, signIn } from "@/auth"
 import { createCourse, joinCourse } from "@/actions/course"
+import { redirect } from "next/navigation"
 
 export default async function Home() {
   const session = await auth()
@@ -31,9 +32,8 @@ export default async function Home() {
               <form action={async (formData) => {
                 "use server"
                 const res = await joinCourse(formData.get("code") as string)
-                if (res.success) {
-                  // Redirigir al curso
-                  window.location.href = `/${res.course?.code}`
+                if (res.success && res.course?.code) {
+                  redirect(`/${res.course.code}`)
                 }
               }} className="space-y-4">
                 <div>
@@ -72,7 +72,13 @@ export default async function Home() {
                 Crear nuevo curso
               </h2>
               {session ? (
-                <form action={createCourse} className="space-y-4">
+                <form action={async (formData) => {
+                  "use server"
+                  const res = await createCourse(formData)
+                  if (res.success && res.code) {
+                    redirect(`/${res.code}`)
+                  }
+                }} className="space-y-4">
                   <div>
                     <label htmlFor="courseName" className="block text-sm font-medium text-text-secondary mb-1.5">
                       Nombre del curso
