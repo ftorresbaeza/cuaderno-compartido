@@ -3,9 +3,8 @@ import { getCourseByCode, renameCourse, deleteCourse } from "@/actions/course"
 import { redirect } from "next/navigation"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Users, Pencil, Trash2, Copy, Share2, Bell } from "lucide-react"
+import { ArrowLeft, Users, Pencil, Trash2, Copy, Share2 } from "lucide-react"
 import Link from "next/link"
-import { PushTestButton } from "@/components/notifications/PushTestButton"
 
 export default async function SettingsPage({
   params,
@@ -117,20 +116,6 @@ export default async function SettingsPage({
               </Link>
             </form>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* Notificaciones */}
-      <Card className="bg-white border-2 border-border shadow-sm">
-        <CardContent className="p-4 space-y-3">
-          <p className="text-sm font-semibold text-text-primary flex items-center gap-2">
-            <Bell className="h-4 w-4 text-accent-primary" />
-            Notificaciones push
-          </p>
-          <p className="text-xs text-text-muted">
-            Verifica que las notificaciones estén funcionando en este dispositivo.
-          </p>
-          <PushTestButton courseId={course.id} />
         </CardContent>
       </Card>
 
