@@ -66,9 +66,10 @@ export async function POST(request: NextRequest) {
     }
 
     if (uploadedImages.length > 0) {
+      const n = uploadedImages.length
       sendPushToCourse(subject.course.id, {
-        title: `Nuevos apuntes en ${subject.name}`,
-        body: `${uploadedImages.length} imagen${uploadedImages.length > 1 ? "es" : ""} subida${uploadedImages.length > 1 ? "s" : ""} en ${subject.course.name}`,
+        title: `${subject.course.name} · ${subject.name}`,
+        body: `${n} foto${n > 1 ? "s" : ""} nueva${n > 1 ? "s" : ""} subida${n > 1 ? "s" : ""}`,
         url: `/${subject.course.code}/subjects/${subjectId}`,
       }).catch(() => {/* no bloquear la respuesta si falla el push */})
     }

@@ -41,9 +41,10 @@ export async function createEvent(input: CreateEventInput) {
       ACTIVITY: "Actividad",
     }
 
+    const dateLabel = new Date(event.date).toLocaleDateString("es-CL", { weekday: "short", day: "numeric", month: "short" })
     sendPushToCourse(input.courseId, {
-      title: `${eventTypeLabel[input.type] ?? "Evento"}: ${event.title}`,
-      body: `${event.subject ? `${event.subject.name} · ` : ""}${new Date(event.date).toLocaleDateString("es-CL", { day: "numeric", month: "short" })}`,
+      title: `${event.course?.name ?? ""} · ${eventTypeLabel[input.type] ?? "Evento"}`,
+      body: `${event.title}${event.subject ? ` — ${event.subject.name}` : ""} · ${dateLabel}`,
       url: `/${event.course?.code ?? input.courseId}/calendar`,
     }).catch(() => {/* no bloquear si falla el push */})
 
