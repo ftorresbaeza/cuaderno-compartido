@@ -116,6 +116,30 @@ export async function getCourseByCode(code: string) {
   return course
 }
 
+export async function getUserCourses() {
+  const session = await auth()
+  if (!session?.user?.id) return []
+
+  const memberships = await prisma.courseMember.findMany({
+    where: { userId: session.user.id },
+    include: {
+      course: {
+        include: {
+          _count: { select: { members: true } },
+        },
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  })
+
+  return memberships.map((m) => ({
+    code: m.course.code,
+    name: m.course.name,
+    role: m.role,
+    memberCount: m.course._count.members,
+  }))
+}
+
 export async function updateMemberRole(courseId: string, userId: string, newRole: "ADMIN" | "FOLLOWER") {
   const session = await auth()
   if (!session?.user?.id) {

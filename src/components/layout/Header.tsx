@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { BookOpen, Settings, LogIn, LogOut, User as UserIcon } from "lucide-react"
+import { BookOpen, LogIn, LogOut } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { auth, signIn, signOut } from "@/auth"
 
@@ -14,48 +14,61 @@ export async function Header({ courseName, courseCode }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 bg-bg-primary/95 backdrop-blur-sm border-b-2 border-border">
       <div className="mx-auto flex h-14 max-w-lg items-center justify-between px-4">
+
         <Link href="/" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent-primary">
             <BookOpen className="h-4 w-4 text-white" />
           </div>
-          <span className="font-display text-lg font-semibold text-text-primary">
-            Cuaderno
-          </span>
-        </Link>
-
-        {courseCode && (
-          <div className="flex items-center gap-2">
-            <div className="hidden sm:flex flex-col items-end">
-              <span className="text-xs font-medium text-text-secondary">
+          {courseCode ? (
+            <div className="flex flex-col leading-none">
+              <span className="font-display text-sm font-semibold text-text-primary truncate max-w-[140px]">
                 {courseName}
               </span>
-              <span className="font-mono text-xs font-bold text-accent-primary tracking-wider">
+              <span className="font-mono text-[10px] font-bold text-accent-primary tracking-wider">
                 {courseCode}
               </span>
             </div>
-          </div>
-        )}
+          ) : (
+            <span className="font-display text-lg font-semibold text-text-primary">
+              Cuaderno
+            </span>
+          )}
+        </Link>
 
         <div className="flex items-center gap-2">
           {session?.user ? (
-            <div className="flex items-center gap-3">
-              {session.user.image ? (
-                <img 
-                  src={session.user.image} 
-                  alt={session.user.name || ""} 
-                  className="h-8 w-8 rounded-full border-2 border-accent-primary"
-                />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-accent-primary">
-                  <UserIcon className="h-4 w-4" />
-                </div>
-              )}
+            <div className="flex items-center gap-2">
+              {/* Chip de usuario logueado */}
+              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-green-50 border border-green-200 rounded-xl">
+                {session.user.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={session.user.image}
+                    alt=""
+                    className="h-6 w-6 rounded-full flex-shrink-0"
+                  />
+                ) : (
+                  <div className="h-6 w-6 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0">
+                    <span className="text-[10px] font-bold text-green-700">
+                      {session.user.name?.[0] ?? "?"}
+                    </span>
+                  </div>
+                )}
+                <span className="text-xs font-semibold text-green-800 max-w-[72px] truncate">
+                  {session.user.name?.split(" ")[0]}
+                </span>
+              </div>
+
               <form action={async () => {
                 "use server"
                 await signOut()
               }}>
-                <button type="submit" className="text-text-muted hover:text-danger hover:bg-red-50 p-2 rounded-xl transition-all">
-                  <LogOut className="h-5 w-5" />
+                <button
+                  type="submit"
+                  className="text-text-muted hover:text-danger hover:bg-red-50 p-2 rounded-xl transition-all"
+                  title="Cerrar sesión"
+                >
+                  <LogOut className="h-4 w-4" />
                 </button>
               </form>
             </div>
@@ -66,11 +79,12 @@ export async function Header({ courseName, courseCode }: HeaderProps) {
             }}>
               <Button size="sm" variant="outline" className="h-9 gap-2 rounded-xl">
                 <LogIn className="h-4 w-4" />
-                <span className="hidden sm:inline">Entrar</span>
+                <span>Entrar</span>
               </Button>
             </form>
           )}
         </div>
+
       </div>
     </header>
   )

@@ -1,151 +1,248 @@
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { BookOpen, Users, Calendar, Camera, Lock } from "lucide-react"
-import { auth, signIn } from "@/auth"
-import { createCourse, joinCourse } from "@/actions/course"
+import { BookOpen, Lock, CheckCircle, LogIn, ChevronRight, Users, Crown, Shield } from "lucide-react"
+import { auth, signIn, signOut } from "@/auth"
+import { createCourse, joinCourse, getUserCourses } from "@/actions/course"
 import { redirect } from "next/navigation"
+import Link from "next/link"
+import { ShareButton } from "@/components/course/ShareButton"
+
+const roleLabel: Record<string, { label: string; icon: typeof Crown }> = {
+  OWNER:    { label: "Admin", icon: Crown },
+  ADMIN:    { label: "Admin", icon: Shield },
+  FOLLOWER: { label: "Miembro", icon: Users },
+}
 
 export default async function Home() {
   const session = await auth()
+  const myCourses = session?.user ? await getUserCourses() : []
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-blue-50 via-bg-primary to-bg-primary">
-      <div className="container mx-auto px-4 py-8 pb-32">
-        <header className="text-center mb-12 pt-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-accent-primary rounded-3xl mb-6 shadow-lg shadow-blue-200">
-            <BookOpen className="w-10 h-10 text-white" />
-          </div>
-          <h1 className="text-4xl font-display font-bold text-text-primary mb-3">
-            Cuaderno Compartido
-          </h1>
-          <p className="text-lg text-text-secondary max-w-sm mx-auto">
-            Colabora fácilmente con las materias del curso. Sube fotos, consulta apuntes y mantente al día.
-          </p>
-        </header>
+    <main className="min-h-screen bg-bg-primary">
+      <div className="mx-auto max-w-lg px-4 pt-10 pb-16 space-y-6">
 
-        <section className="max-w-md mx-auto space-y-6">
-          <Card className="border-2 border-accent-primary bg-white shadow-md">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold mb-4 text-text-primary">
-                Unirse a un curso
-              </h2>
-              <form action={async (formData) => {
-                "use server"
-                const res = await joinCourse(formData.get("code") as string)
-                if (res.success && res.course?.code) {
-                  redirect(`/${res.course.code}`)
-                }
-              }} className="space-y-4">
-                <div>
-                  <label htmlFor="courseCode" className="block text-sm font-medium text-text-secondary mb-1.5">
-                    Código del curso
-                  </label>
-                  <input
-                    type="text"
-                    id="courseCode"
-                    name="code"
-                    placeholder="Ej: ABC123"
-                    maxLength={6}
-                    className="w-full px-4 py-3 border-2 border-border rounded-xl text-center text-lg font-mono uppercase tracking-wider focus:border-accent-primary focus:outline-none transition-colors"
-                    required
-                  />
-                </div>
-                <Button type="submit" className="w-full bg-accent-primary hover:bg-blue-600 text-white font-semibold py-3 rounded-xl">
-                  Unirse al curso
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t border-border" />
+        {/* ── Logo + header ── */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-accent-primary shadow-sm">
+              <BookOpen className="h-5 w-5 text-white" />
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-bg-primary px-3 text-text-muted">o</span>
-            </div>
+            <span className="font-display text-xl font-bold text-text-primary">Cuaderno</span>
           </div>
 
-          <Card className="bg-white shadow-md">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold mb-4 text-text-primary">
-                Crear nuevo curso
-              </h2>
-              {session ? (
-                <form action={async (formData) => {
-                  "use server"
-                  const res = await createCourse(formData)
-                  if (res.success && res.code) {
-                    redirect(`/${res.code}`)
-                  }
-                }} className="space-y-4">
-                  <div>
-                    <label htmlFor="courseName" className="block text-sm font-medium text-text-secondary mb-1.5">
-                      Nombre del curso
-                    </label>
-                    <input
-                      type="text"
-                      id="courseName"
-                      name="name"
-                      placeholder="Ej: 3° Básico A"
-                      className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors"
-                      required
-                    />
-                  </div>
-                  <Button type="submit" variant="outline" className="w-full border-2 border-accent-primary text-accent-primary hover:bg-blue-50 font-semibold py-3 rounded-xl">
-                    Crear curso
-                  </Button>
-                </form>
+          {session?.user && (
+            <form action={async () => {
+              "use server"
+              await signOut()
+            }}>
+              <button
+                type="submit"
+                className="text-xs text-text-muted underline underline-offset-2 hover:text-danger transition-colors"
+              >
+                Salir
+              </button>
+            </form>
+          )}
+        </div>
+
+        {/* ── Estado del usuario ── */}
+        {session?.user ? (
+          <div className="space-y-5">
+            {/* Tarjeta de bienvenida */}
+            <div className="flex items-center gap-4 p-4 bg-green-50 rounded-2xl border-2 border-green-100">
+              {session.user.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={session.user.image}
+                  alt=""
+                  className="h-14 w-14 rounded-full border-2 border-green-200 flex-shrink-0"
+                />
               ) : (
-                <div className="bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl p-6 text-center">
-                  <Lock className="w-8 h-8 text-slate-400 mx-auto mb-3" />
-                  <p className="text-sm text-text-secondary mb-4">
-                    Debes iniciar sesión para ser el administrador de un curso.
-                  </p>
-                  <form action={async () => {
-                    "use server"
-                    await signIn("google")
-                  }}>
-                    <Button variant="outline" className="w-full rounded-xl gap-2">
-                      Iniciar sesión con Google
-                    </Button>
-                  </form>
+                <div className="h-14 w-14 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0">
+                  <span className="text-xl font-bold text-green-700">
+                    {session.user.name?.[0] ?? "?"}
+                  </span>
                 </div>
               )}
-            </CardContent>
-          </Card>
-        </section>
+              <div className="min-w-0">
+                <p className="font-bold text-text-primary text-lg leading-tight truncate">
+                  Hola, {session.user.name?.split(" ")[0]} 👋
+                </p>
+                <div className="flex items-center gap-1 mt-1">
+                  <CheckCircle className="h-3.5 w-3.5 text-green-500 flex-shrink-0" />
+                  <p className="text-xs text-green-700 truncate">{session.user.email}</p>
+                </div>
+              </div>
+            </div>
 
-        <section className="mt-16 grid grid-cols-2 gap-4 max-w-md mx-auto">
-          <div className="text-center p-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-green-100 rounded-2xl mb-3 mx-auto">
-              <Camera className="w-6 h-6 text-accent-secondary" />
-            </div>
-            <p className="text-sm font-medium text-text-primary">Sube fotos</p>
-            <p className="text-xs text-text-muted mt-1">Desde cámara o galería</p>
+            {/* Cursos del usuario (desde BD) */}
+            {myCourses.length > 0 ? (
+              <div className="space-y-2">
+                <p className="text-sm font-semibold text-text-secondary px-1">Tus cursos</p>
+                {myCourses.map((course) => {
+                  const role = roleLabel[course.role] ?? roleLabel.FOLLOWER
+                  const RoleIcon = role.icon
+                  return (
+                    <Link
+                      key={course.code}
+                      href={`/${course.code}`}
+                      className="flex items-center gap-3 p-4 bg-white rounded-2xl border-2 border-border active:scale-[0.98] transition-transform"
+                    >
+                      <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 flex-shrink-0">
+                        <BookOpen className="h-5 w-5 text-accent-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-text-primary truncate leading-tight">{course.name}</p>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="text-xs text-text-muted font-mono tracking-wider">{course.code}</span>
+                          <span className="text-text-muted">·</span>
+                          <div className="flex items-center gap-0.5">
+                            <RoleIcon className="h-3 w-3 text-text-muted" />
+                            <span className="text-xs text-text-muted">{role.label}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <ShareButton
+                          courseCode={course.code}
+                          courseName={course.name}
+                          className="p-2 text-text-muted hover:text-accent-primary hover:bg-blue-50"
+                        />
+                        <ChevronRight className="h-5 w-5 text-text-muted" />
+                      </div>
+                    </Link>
+                  )
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-6 px-4 bg-slate-50 rounded-2xl border-2 border-dashed border-border">
+                <BookOpen className="h-8 w-8 text-text-muted mx-auto mb-2" />
+                <p className="text-sm text-text-secondary font-medium">Aún no perteneces a ningún curso</p>
+                <p className="text-xs text-text-muted mt-1">Ingresa el código abajo para unirte</p>
+              </div>
+            )}
           </div>
-          <div className="text-center p-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-yellow-100 rounded-2xl mb-3 mx-auto">
-              <Users className="w-6 h-6 text-accent-tertiary" />
+
+        ) : (
+          /* NO LOGUEADO */
+          <div className="text-center py-4 space-y-5">
+            <div>
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-accent-primary rounded-3xl mb-4 shadow-lg shadow-blue-200">
+                <BookOpen className="w-10 h-10 text-white" />
+              </div>
+              <h1 className="text-2xl font-display font-bold text-text-primary mb-2">
+                Cuaderno Compartido
+              </h1>
+              <p className="text-sm text-text-secondary max-w-xs mx-auto leading-relaxed">
+                Comparte fotos del cuaderno con el curso. Nunca te pierdas una clase.
+              </p>
             </div>
-            <p className="text-sm font-medium text-text-primary">Colabora</p>
-            <p className="text-xs text-text-muted mt-1">Todos aportan</p>
+
+            <form action={async () => {
+              "use server"
+              await signIn("google")
+            }}>
+              <Button
+                type="submit"
+                className="w-full bg-accent-primary hover:bg-blue-600 text-white font-semibold py-4 rounded-2xl gap-2 text-base"
+              >
+                <LogIn className="h-5 w-5" />
+                Entrar con Google
+              </Button>
+            </form>
+
+            <p className="text-xs text-text-muted">
+              Solo para crear o administrar cursos. Puedes unirte sin cuenta.
+            </p>
           </div>
-          <div className="text-center p-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-2xl mb-3 mx-auto">
-              <Calendar className="w-6 h-6 text-accent-primary" />
-            </div>
-            <p className="text-sm font-medium text-text-primary">Organiza</p>
-            <p className="text-xs text-text-muted mt-1">Por fecha y materia</p>
+        )}
+
+        {/* ── Separador ── */}
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t-2 border-dashed border-border" />
           </div>
-          <div className="text-center p-4">
-            <div className="inline-flex items-center justify-center w-12 h-12 bg-purple-100 rounded-2xl mb-3 mx-auto">
-              <BookOpen className="w-6 h-6 text-purple-500" />
-            </div>
-            <p className="text-sm font-medium text-text-primary">Consulta</p>
-            <p className="text-xs text-text-muted mt-1">Fácil y rápido</p>
+          <div className="relative flex justify-center">
+            <span className="bg-bg-primary px-3 text-xs uppercase tracking-wider text-text-muted font-medium">
+              {session ? "Unirse a otro curso" : "Unirse con código"}
+            </span>
           </div>
-        </section>
+        </div>
+
+        {/* ── Unirse a curso ── */}
+        <div className="bg-white rounded-2xl border-2 border-border p-5 space-y-3">
+          <label className="block text-sm font-semibold text-text-secondary">
+            Código del curso
+          </label>
+          <form
+            action={async (formData) => {
+              "use server"
+              const res = await joinCourse(formData.get("code") as string)
+              if (res.success && res.course?.code) {
+                redirect(`/${res.course.code}`)
+              }
+            }}
+            className="space-y-3"
+          >
+            <input
+              type="text"
+              name="code"
+              placeholder="ABC123"
+              maxLength={6}
+              autoCapitalize="characters"
+              className="w-full px-4 py-4 border-2 border-border rounded-xl text-center text-2xl font-mono uppercase tracking-[0.3em] focus:border-accent-primary focus:outline-none transition-colors placeholder:text-border placeholder:tracking-widest"
+              required
+            />
+            <Button
+              type="submit"
+              className="w-full bg-accent-primary hover:bg-blue-600 text-white font-semibold py-3.5 rounded-xl text-base"
+            >
+              Entrar al curso
+            </Button>
+          </form>
+        </div>
+
+        {/* ── Crear curso (solo logueados) ── */}
+        {session ? (
+          <div className="bg-white rounded-2xl border-2 border-border p-5 space-y-3">
+            <label className="block text-sm font-semibold text-text-secondary">
+              Crear nuevo curso
+            </label>
+            <form
+              action={async (formData) => {
+                "use server"
+                const res = await createCourse(formData)
+                if (res.success && res.code) {
+                  redirect(`/${res.code}`)
+                }
+              }}
+              className="space-y-3"
+            >
+              <input
+                type="text"
+                name="name"
+                placeholder="Ej: 3° Básico A"
+                className="w-full px-4 py-3.5 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors"
+                required
+              />
+              <Button
+                type="submit"
+                variant="outline"
+                className="w-full border-2 border-accent-primary text-accent-primary hover:bg-blue-50 font-semibold py-3 rounded-xl"
+              >
+                Crear curso
+              </Button>
+            </form>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-border">
+            <Lock className="h-5 w-5 text-text-muted flex-shrink-0" />
+            <p className="text-sm text-text-muted leading-relaxed">
+              <span className="font-medium text-text-secondary">¿Eres apoderado o profe?</span>{" "}
+              Inicia sesión con Google para crear y administrar cursos.
+            </p>
+          </div>
+        )}
+
       </div>
     </main>
   )

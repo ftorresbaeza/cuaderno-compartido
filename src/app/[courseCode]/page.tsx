@@ -2,9 +2,10 @@ import Link from "next/link"
 import { getCourseByCode } from "@/actions/course"
 import { SubjectList } from "@/components/subject/SubjectList"
 import { CourseDialogs } from "@/components/course/CourseDialogs"
+import { ShareButton } from "@/components/course/ShareButton"
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, CheckCircle, AlertCircle, Star, Image, Users, Settings } from "lucide-react"
-import { auth } from "@/auth"
+import { Calendar, CheckCircle, AlertCircle, Star, Image, Users, Settings, LogIn } from "lucide-react"
+import { auth, signIn } from "@/auth"
 import { format, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -58,7 +59,26 @@ export default async function CoursePage({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between py-4">
+      {/* Banner: invitar a loguearse si es anónimo */}
+      {!session?.user && (
+        <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-2xl border border-blue-100">
+          <LogIn className="h-5 w-5 text-accent-primary flex-shrink-0" />
+          <p className="text-sm text-blue-800 flex-1 leading-snug">
+            <span className="font-semibold">¿Quieres recordar este curso?</span>{" "}
+            Inicia sesión con Google y aparecerá automáticamente la próxima vez.
+          </p>
+          <form action={async () => {
+            "use server"
+            await signIn("google")
+          }}>
+            <button type="submit" className="text-xs font-bold text-accent-primary whitespace-nowrap">
+              Entrar
+            </button>
+          </form>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between py-2">
         <div className="flex-1" />
         <div className="flex-1 text-center">
           <h1 className="text-2xl font-display font-bold text-text-primary mb-1">
@@ -70,9 +90,14 @@ export default async function CoursePage({
               : format(displayDate, "EEEE d 'de' MMMM", { locale: es })}
           </p>
         </div>
-        <div className="flex-1 flex justify-end">
+        <div className="flex-1 flex justify-end items-center gap-1">
+          <ShareButton
+            courseCode={courseCode}
+            courseName={course.name}
+            className="p-2 text-text-muted hover:text-accent-primary hover:bg-blue-50"
+          />
           {canManage && (
-            <Link 
+            <Link
               href={`/${courseCode}/members`}
               className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
               title="Gestionar miembros"
