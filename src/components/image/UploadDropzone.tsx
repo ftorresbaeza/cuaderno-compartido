@@ -86,16 +86,25 @@ export function UploadDropzone({ courseCode, subjects, initialDate, initialSubje
   return (
     <div className="space-y-6">
       <Card>
-        <CardContent className="p-4">
-          <label className="block">
-            <div className="border-2 border-dashed border-border rounded-xl p-6 text-center cursor-pointer hover:border-accent-primary hover:bg-blue-50/50 transition-all">
-              <Camera className="mx-auto h-10 w-10 text-text-muted mb-2" />
-              <p className="text-text-secondary font-medium">
-                Toca para seleccionar imágenes
-              </p>
-              <p className="text-text-muted text-sm mt-1">
-                Cámara o galería (máx. 10)
-              </p>
+        <CardContent className="p-4 grid grid-cols-2 gap-3">
+          <label className="cursor-pointer">
+            <div className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent-primary hover:bg-blue-50/50 transition-all h-32 active:scale-95 text-center">
+              <Camera className="h-8 w-8 text-text-secondary mb-2" />
+              <p className="text-text-secondary font-semibold text-sm leading-tight">Tomar<br/>Foto</p>
+            </div>
+            <input
+              type="file"
+              accept="image/*"
+              capture="environment"
+              onChange={handleFileSelect}
+              className="hidden"
+            />
+          </label>
+
+          <label className="cursor-pointer">
+            <div className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent-primary hover:bg-blue-50/50 transition-all h-32 active:scale-95 text-center">
+              <Image className="h-8 w-8 text-text-secondary mb-2" />
+              <p className="text-text-secondary font-semibold text-sm leading-tight">Desde<br/>Galería</p>
             </div>
             <input
               type="file"
