@@ -3,7 +3,7 @@ import webpush from "web-push"
 
 export async function GET() {
   const rawPrivate = process.env.VAPID_PRIVATE_KEY ?? ""
-  const privateKey = rawPrivate.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
+  const privateKey = rawPrivate.trim().replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
   const publicKey = "BNpU_ZnAQrxw6DU0gfQlLLxBhpk6MI2hbF_ZhPts272LhLt4azNtepjBoLgBY1DWw2-j3f-RycTVfe3A7jWTHwA"
 
   let vapidOk = false

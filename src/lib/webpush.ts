@@ -15,8 +15,8 @@ export async function sendPushToCourse(
 
   const publicKey = "BNpU_ZnAQrxw6DU0gfQlLLxBhpk6MI2hbF_ZhPts272LhLt4azNtepjBoLgBY1DWw2-j3f-RycTVfe3A7jWTHwA"
   const rawPrivateKey = process.env.VAPID_PRIVATE_KEY ?? ""
-  // Normalize to URL-safe base64 without padding (handles standard base64 or padded input)
-  const privateKey = rawPrivateKey.replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
+  // Trim whitespace (newlines added by some shells), normalize to URL-safe base64 without padding
+  const privateKey = rawPrivateKey.trim().replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
 
   console.log(`[webpush] privateKey length=${privateKey.length} (raw=${rawPrivateKey.length})`)
 
