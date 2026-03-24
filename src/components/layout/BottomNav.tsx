@@ -17,7 +17,7 @@ export function BottomNav() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-bg-card border-t-2 border-border safe-bottom">
-      <div className="mx-auto flex h-16 max-w-lg items-center justify-around px-4">
+<div className="mx-auto flex h-16 max-w-lg items-center justify-around px-4">
         {navItems.map((item) => {
           const href = `${basePath}${item.href}`
           const isActive = pathname === href || (item.href === "" && pathname === basePath)
@@ -48,9 +48,17 @@ export function FAB() {
   const pathname = usePathname()
   const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload|\/members|\/settings).*$/, "")
 
+  // Detectar si estamos en una página de materia: /{courseCode}/subjects/{subjectId}
+  const subjectMatch = pathname.match(/\/subjects\/([^/]+)$/)
+  const subjectId = subjectMatch?.[1]
+
+  const uploadHref = subjectId
+    ? `${basePath}/upload?subjectId=${subjectId}`
+    : `${basePath}/upload`
+
   return (
     <Link
-      href={`${basePath}/upload`}
+      href={uploadHref}
       className="fixed bottom-20 right-4 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-accent-primary text-white shadow-lg shadow-blue-300 transition-transform hover:scale-105 active:scale-95"
     >
       <Plus className="h-6 w-6" strokeWidth={2.5} />

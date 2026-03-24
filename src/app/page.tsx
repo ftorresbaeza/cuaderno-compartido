@@ -243,6 +243,11 @@ export default async function Home() {
           </div>
         )}
 
+        {/* Versión */}
+        <p className="text-center text-[11px] text-text-muted/50 font-mono select-none">
+          v{process.env.NEXT_PUBLIC_APP_VERSION} · {process.env.NEXT_PUBLIC_BUILD_DATE}
+        </p>
+
       </div>
     </main>
   )

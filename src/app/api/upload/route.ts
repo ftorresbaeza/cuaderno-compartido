@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
 import { put } from "@vercel/blob"
 import { revalidatePath } from "next/cache"
+import { sendPushToCourse } from "@/lib/webpush"
 
 export async function POST(request: NextRequest) {
   try {
@@ -62,6 +63,14 @@ export async function POST(request: NextRequest) {
         console.error(`Error uploading ${file.name}:`, error)
         errors.push(`Error uploading ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`)
       }
+    }
+
+    if (uploadedImages.length > 0) {
+      sendPushToCourse(subject.course.id, {
+        title: `Nuevos apuntes en ${subject.name}`,
+        body: `${uploadedImages.length} imagen${uploadedImages.length > 1 ? "es" : ""} subida${uploadedImages.length > 1 ? "s" : ""} en ${subject.course.name}`,
+        url: `/${subject.course.code}/subjects/${subjectId}`,
+      }).catch(() => {/* no bloquear la respuesta si falla el push */})
     }
 
     return NextResponse.json({

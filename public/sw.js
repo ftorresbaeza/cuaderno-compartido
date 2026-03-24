@@ -1,4 +1,4 @@
-// Un simple service worker para cumplir con los requisitos de PWA y permitir "Añadir a la pantalla de inicio"
+// Service worker para PWA y notificaciones push - v2
 self.addEventListener('install', () => {
   self.skipWaiting();
 });
@@ -8,7 +8,28 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Ignorar peticiones de API y solo dejar pasar lo mínimo requerido por Chrome
-  // para considerar que la PWA tiene capacidad básica offline.
   return;
+});
+
+self.addEventListener('push', (event) => {
+  const data = event.data?.json() ?? {};
+  const title = data.title ?? 'Cuaderno Compartido';
+  const options = {
+    body: data.body ?? '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    data: { url: data.url ?? '/' },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(clients.openWindow(event.notification.data?.url ?? '/'));
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });

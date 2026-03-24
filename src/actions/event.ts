@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { sendPushToCourse } from "@/lib/webpush"
 
 export type EventType = "TASK" | "TEST" | "ACTIVITY"
 
@@ -31,8 +32,20 @@ export async function createEvent(input: CreateEventInput) {
         courseId: input.courseId,
         subjectId: input.subjectId || null,
       },
-      include: { subject: true },
+      include: { subject: true, course: true },
     })
+
+    const eventTypeLabel: Record<string, string> = {
+      TASK: "Tarea",
+      TEST: "Prueba",
+      ACTIVITY: "Actividad",
+    }
+
+    sendPushToCourse(input.courseId, {
+      title: `${eventTypeLabel[input.type] ?? "Evento"}: ${event.title}`,
+      body: `${event.subject ? `${event.subject.name} · ` : ""}${new Date(event.date).toLocaleDateString("es-CL", { day: "numeric", month: "short" })}`,
+      url: `/${event.course?.code ?? input.courseId}/calendar`,
+    }).catch(() => {/* no bloquear si falla el push */})
 
     revalidatePath("/")
     return { success: true, event }

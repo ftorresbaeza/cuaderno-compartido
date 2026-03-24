@@ -3,6 +3,7 @@ import { getCourseByCode } from "@/actions/course"
 import { SubjectList } from "@/components/subject/SubjectList"
 import { CourseDialogs } from "@/components/course/CourseDialogs"
 import { ShareButton } from "@/components/course/ShareButton"
+import { PushNotificationToggle } from "@/components/notifications/PushNotificationToggle"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, CheckCircle, AlertCircle, Star, Image, Users, Settings, LogIn } from "lucide-react"
 import { auth, signIn } from "@/auth"
@@ -91,6 +92,7 @@ export default async function CoursePage({
           </p>
         </div>
         <div className="flex-1 flex justify-end items-center gap-1">
+          <PushNotificationToggle courseId={course.id} />
           <ShareButton
             courseCode={courseCode}
             courseName={course.name}

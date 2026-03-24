@@ -111,8 +111,27 @@ export async function deleteImage(imageId: string) {
 export async function deleteImageAdmin(imageId: string) {
   const { auth } = await import("@/auth")
   const session = await auth()
+  if (!session?.user?.id) return { error: "No autorizado" }
+
+  // Verificar que la imagen existe y obtener el courseId
+  const image = await prisma.imageNote.findUnique({
+    where: { id: imageId },
+    include: { subject: true },
+  })
+  if (!image) return { error: "Imagen no encontrada" }
+
+  // Permitir si es OWNER, ADMIN del curso, o super admin
   const SUPER_ADMIN_EMAIL = "ftorresbaeza@gmail.com"
-  if (session?.user?.email !== SUPER_ADMIN_EMAIL) return { error: "No autorizado" }
+  const isSuperAdmin = session.user.email === SUPER_ADMIN_EMAIL
+
+  if (!isSuperAdmin) {
+    const membership = await prisma.courseMember.findUnique({
+      where: { userId_courseId: { userId: session.user.id, courseId: image.subject.courseId } },
+    })
+    if (!membership || (membership.role !== "OWNER" && membership.role !== "ADMIN")) {
+      return { error: "No autorizado" }
+    }
+  }
 
   try {
     await prisma.imageNote.delete({ where: { id: imageId } })

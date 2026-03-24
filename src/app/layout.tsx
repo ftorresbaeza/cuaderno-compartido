@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import { Toaster } from "@/components/ui/toaster";
+import { UpdateBanner } from "@/components/layout/UpdateBanner";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -44,6 +45,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={`${dmSans.variable} ${jetbrainsMono.variable}`}>
       <body className="min-h-screen bg-bg-primary text-text-primary font-sans antialiased">
+        <UpdateBanner />
         {children}
         <Toaster />
         <Script

@@ -8,8 +8,6 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { auth } from "@/auth"
 
-const SUPER_ADMIN_EMAIL = "ftorresbaeza@gmail.com"
-
 export default async function SubjectPage({
   params,
 }: {
@@ -20,11 +18,16 @@ export default async function SubjectPage({
     getSubjectWithImages(subjectId),
     auth(),
   ])
-  const isSuperAdmin = session?.user?.email === SUPER_ADMIN_EMAIL
 
   if (!subject) {
     notFound()
   }
+
+  // Puede eliminar: super admin, o miembro con rol OWNER/ADMIN en este curso
+  const SUPER_ADMIN_EMAIL = "ftorresbaeza@gmail.com"
+  const isSuperAdmin = session?.user?.email === SUPER_ADMIN_EMAIL
+  const membership = subject.course.members?.find((m: { userId: string; role: string }) => m.userId === session?.user?.id)
+  const canDelete = isSuperAdmin || membership?.role === "OWNER" || membership?.role === "ADMIN"
 
   return (
     <div className="space-y-6">
@@ -57,7 +60,7 @@ export default async function SubjectPage({
         </h2>
         <ImageGrid
           images={images}
-          onDelete={isSuperAdmin ? deleteImageAdmin : undefined}
+          onDelete={canDelete ? deleteImageAdmin : undefined}
         />
       </div>
     </div>

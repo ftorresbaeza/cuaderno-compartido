@@ -54,9 +54,10 @@ model Course {
   name      String
   createdAt DateTime  @default(now())
   
-  subjects  Subject[]
-  events    Event[]
-  members   CourseMember[]
+  subjects           Subject[]
+  events             Event[]
+  members            CourseMember[]
+  pushSubscriptions  PushSubscription[]
 }
 
 model CourseMember {
@@ -125,4 +126,17 @@ enum EventType {
   TASK
   TEST
   ACTIVITY
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  endpoint  String
+  p256dh    String
+  auth      String
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([endpoint, courseId])
+  @@index([courseId])
 }

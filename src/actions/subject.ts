@@ -40,7 +40,7 @@ export async function getSubjectWithImages(subjectId: string, page = 1, pageSize
   const [subject, images, totalImages] = await Promise.all([
     prisma.subject.findUnique({
       where: { id: subjectId },
-      include: { course: true },
+      include: { course: { include: { members: { select: { userId: true, role: true } } } } },
     }),
     prisma.imageNote.findMany({
       where: { subjectId },
