@@ -3,7 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { X, ZoomIn, Calendar as CalendarIcon, ChevronRight, ChevronDown, Camera } from "lucide-react"
+import { X, ZoomIn, Calendar as CalendarIcon, ChevronRight, ChevronDown, Camera, Trash2 } from "lucide-react"
 import { format, isToday, isYesterday } from "date-fns"
 import { es } from "date-fns/locale"
 import {
@@ -25,10 +25,12 @@ interface ImageNote {
 interface ImageGridProps {
   images: ImageNote[]
   isLoading?: boolean
+  onDelete?: (imageId: string) => Promise<{ success?: boolean; error?: string }>
 }
 
-export function ImageGrid({ images, isLoading }: ImageGridProps) {
+export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
   const [selectedImage, setSelectedImage] = useState<ImageNote | null>(null)
+  const [deleting, setDeleting] = useState(false)
   const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({})
 
   const toggleDate = (dateKey: string) => {
@@ -164,6 +166,22 @@ export function ImageGrid({ images, isLoading }: ImageGridProps) {
               >
                 <X className="h-5 w-5 text-white" />
               </button>
+              {onDelete && (
+                <button
+                  disabled={deleting}
+                  onClick={async () => {
+                    if (!confirm("¿Eliminar esta imagen?")) return
+                    setDeleting(true)
+                    await onDelete(selectedImage.id)
+                    setSelectedImage(null)
+                    setDeleting(false)
+                  }}
+                  className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-2 rounded-full bg-red-600/80 hover:bg-red-600 text-white text-sm font-medium transition-colors disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {deleting ? "Eliminando…" : "Eliminar"}
+                </button>
+              )}
             </div>
           )}
         </DialogContent>

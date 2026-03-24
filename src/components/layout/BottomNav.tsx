@@ -13,7 +13,7 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname()
-  const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload).*$/, "")
+  const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload|\/members|\/settings).*$/, "")
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-bg-card border-t-2 border-border safe-bottom">
@@ -46,7 +46,7 @@ export function BottomNav() {
 
 export function FAB() {
   const pathname = usePathname()
-  const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload).*$/, "")
+  const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload|\/members|\/settings).*$/, "")
 
   return (
     <Link

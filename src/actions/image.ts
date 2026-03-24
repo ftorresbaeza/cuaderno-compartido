@@ -108,6 +108,22 @@ export async function deleteImage(imageId: string) {
   }
 }
 
+export async function deleteImageAdmin(imageId: string) {
+  const { auth } = await import("@/auth")
+  const session = await auth()
+  const SUPER_ADMIN_EMAIL = "ftorresbaeza@gmail.com"
+  if (session?.user?.email !== SUPER_ADMIN_EMAIL) return { error: "No autorizado" }
+
+  try {
+    await prisma.imageNote.delete({ where: { id: imageId } })
+    revalidatePath("/", "layout")
+    return { success: true }
+  } catch (error) {
+    console.error("Error deleting image:", error)
+    return { error: "Error al eliminar la imagen" }
+  }
+}
+
 export async function cleanupOldImages() {
   const cutoffDate = new Date()
   cutoffDate.setDate(cutoffDate.getDate() - 90)

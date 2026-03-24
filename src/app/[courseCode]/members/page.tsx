@@ -60,7 +60,7 @@ export default async function MembersPage({
                 )}
                 <div>
                   <p className="font-semibold text-text-primary">{member.user.name || "Usuario"}</p>
-                  <p className="text-xs text-text-muted capitalize">{member.role.toLowerCase()}</p>
+                  <p className="text-xs text-text-muted">{member.user.email}</p>
                 </div>
               </div>
 

@@ -1,7 +1,9 @@
 import Link from "next/link"
-import { BookOpen, LogIn, LogOut } from "lucide-react"
+import { BookOpen, LogIn, LogOut, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { auth, signIn, signOut } from "@/auth"
+
+const SUPER_ADMIN_EMAIL = "ftorresbaeza@gmail.com"
 
 interface HeaderProps {
   courseName?: string
@@ -38,6 +40,16 @@ export async function Header({ courseName, courseCode }: HeaderProps) {
         <div className="flex items-center gap-2">
           {session?.user ? (
             <div className="flex items-center gap-2">
+              {/* Link admin si es super admin */}
+              {session.user.email === SUPER_ADMIN_EMAIL && (
+                <Link
+                  href="/admin"
+                  className="p-2 hover:bg-purple-50 rounded-xl transition-colors"
+                  title="Panel de administración"
+                >
+                  <Shield className="h-4 w-4 text-purple-600" />
+                </Link>
+              )}
               {/* Chip de usuario logueado */}
               <div className="flex items-center gap-2 px-2.5 py-1.5 bg-green-50 border border-green-200 rounded-xl">
                 {session.user.image ? (

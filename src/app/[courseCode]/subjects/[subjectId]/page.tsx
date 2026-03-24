@@ -1,10 +1,14 @@
 import { notFound } from "next/navigation"
 import { getSubjectWithImages } from "@/actions/subject"
+import { deleteImageAdmin } from "@/actions/image"
 import { ImageGrid } from "@/components/image/ImageGrid"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, Image, Calendar } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
+import { auth } from "@/auth"
+
+const SUPER_ADMIN_EMAIL = "ftorresbaeza@gmail.com"
 
 export default async function SubjectPage({
   params,
@@ -12,7 +16,11 @@ export default async function SubjectPage({
   params: Promise<{ courseCode: string; subjectId: string }>
 }) {
   const { courseCode, subjectId } = await params
-  const { subject, images, totalImages } = await getSubjectWithImages(subjectId)
+  const [{ subject, images, totalImages }, session] = await Promise.all([
+    getSubjectWithImages(subjectId),
+    auth(),
+  ])
+  const isSuperAdmin = session?.user?.email === SUPER_ADMIN_EMAIL
 
   if (!subject) {
     notFound()
@@ -47,7 +55,10 @@ export default async function SubjectPage({
         <h2 className="text-sm font-semibold text-text-secondary mb-3">
           Galería de imágenes
         </h2>
-        <ImageGrid images={images} />
+        <ImageGrid
+          images={images}
+          onDelete={isSuperAdmin ? deleteImageAdmin : undefined}
+        />
       </div>
     </div>
   )
