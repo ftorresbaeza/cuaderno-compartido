@@ -3,7 +3,8 @@ import { getCourseByCode } from "@/actions/course"
 import { SubjectList } from "@/components/subject/SubjectList"
 import { CourseDialogs } from "@/components/course/CourseDialogs"
 import { Card, CardContent } from "@/components/ui/card"
-import { Calendar, CheckCircle, AlertCircle, Star, Image, Users } from "lucide-react"
+import { Calendar, CheckCircle, AlertCircle, Star, Image, Users, Settings } from "lucide-react"
+import { auth } from "@/auth"
 import { format, isToday } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -17,10 +18,15 @@ export default async function CoursePage({
   const { courseCode } = await params
   const { date: dateParam } = await searchParams
   const course = await getCourseByCode(courseCode)
+  const session = await auth()
 
   if (!course) {
     return <div>Curso no encontrado</div>
   }
+
+  // Verificar si es admin o owner
+  const currentMember = course.members.find(m => m.userId === session?.user?.id)
+  const canManage = currentMember?.role === "OWNER" || currentMember?.role === "ADMIN"
 
   const selectedDate = dateParam ? new Date(dateParam) : new Date()
   selectedDate.setHours(12, 0, 0, 0)
@@ -52,15 +58,29 @@ export default async function CoursePage({
 
   return (
     <div className="space-y-6">
-      <div className="text-center py-4">
-        <h1 className="text-2xl font-display font-bold text-text-primary mb-1">
-          {course.name}
-        </h1>
-        <p className="text-text-muted text-sm">
-          {isToday(displayDate)
-            ? "Hoy"
-            : format(displayDate, "EEEE d 'de' MMMM", { locale: es })}
-        </p>
+      <div className="flex items-center justify-between py-4">
+        <div className="flex-1" />
+        <div className="flex-1 text-center">
+          <h1 className="text-2xl font-display font-bold text-text-primary mb-1">
+            {course.name}
+          </h1>
+          <p className="text-text-muted text-sm">
+            {isToday(displayDate)
+              ? "Hoy"
+              : format(displayDate, "EEEE d 'de' MMMM", { locale: es })}
+          </p>
+        </div>
+        <div className="flex-1 flex justify-end">
+          {canManage && (
+            <Link 
+              href={`/${courseCode}/members`}
+              className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
+              title="Gestionar miembros"
+            >
+              <Settings className="h-5 w-5 text-text-muted" />
+            </Link>
+          )}
+        </div>
       </div>
 
       <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-accent-primary/20">

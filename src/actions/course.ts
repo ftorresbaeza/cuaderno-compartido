@@ -115,3 +115,49 @@ export async function getCourseByCode(code: string) {
 
   return course
 }
+
+export async function updateMemberRole(courseId: string, userId: string, newRole: "ADMIN" | "FOLLOWER") {
+  const session = await auth()
+  if (!session?.user?.id) {
+    return { error: "No autorizado" }
+  }
+
+  // Verificar que el que hace el cambio es el OWNER
+  const requester = await prisma.courseMember.findUnique({
+    where: {
+      userId_courseId: {
+        userId: session.user.id,
+        courseId
+      }
+    }
+  })
+
+  if (requester?.role !== "OWNER") {
+    return { error: "Solo el propietario puede gestionar administradores" }
+  }
+
+  // No permitir que el OWNER se cambie su propio rol (seguridad)
+  if (userId === session.user.id) {
+    return { error: "No puedes cambiar tu propio rol" }
+  }
+
+  try {
+    await prisma.courseMember.update({
+      where: {
+        userId_courseId: {
+          userId,
+          courseId
+        }
+      },
+      data: {
+        role: newRole
+      }
+    })
+
+    revalidatePath(`/[code]/members`)
+    return { success: true }
+  } catch (error) {
+    console.error("Error updating role:", error)
+    return { error: "Error al actualizar el rol" }
+  }
+}
