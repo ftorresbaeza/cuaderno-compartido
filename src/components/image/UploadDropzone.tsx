@@ -100,7 +100,6 @@ export function UploadDropzone({ courseCode, subjects, initialDate, initialSubje
             <input
               type="file"
               accept="image/*"
-              capture="environment"
               multiple
               onChange={handleFileSelect}
               className="hidden"
