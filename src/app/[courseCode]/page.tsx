@@ -3,6 +3,7 @@ import { getCourseByCode } from "@/actions/course"
 import { SubjectList } from "@/components/subject/SubjectList"
 import { CourseDialogs } from "@/components/course/CourseDialogs"
 import { ShareButton } from "@/components/course/ShareButton"
+import { RequestPhotosButton } from "@/components/course/RequestPhotosButton"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, CheckCircle, AlertCircle, Star, Image, Users, Settings, LogIn } from "lucide-react"
 import { auth, signIn } from "@/auth"
@@ -91,6 +92,11 @@ export default async function CoursePage({
           </p>
         </div>
         <div className="flex-1 flex justify-end items-center gap-1">
+          <RequestPhotosButton
+            courseCode={courseCode}
+            courseName={course.name}
+            subjects={course.subjects.map(s => ({ id: s.id, name: s.name }))}
+          />
           <ShareButton
             courseCode={courseCode}
             courseName={course.name}
@@ -98,9 +104,9 @@ export default async function CoursePage({
           />
           {canManage && (
             <Link
-              href={`/${courseCode}/members`}
+              href={`/${courseCode}/settings`}
               className="p-2 hover:bg-slate-100 rounded-xl transition-colors"
-              title="Gestionar miembros"
+              title="Configuración del curso"
             >
               <Settings className="h-5 w-5 text-text-muted" />
             </Link>

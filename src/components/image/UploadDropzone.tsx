@@ -11,13 +11,15 @@ import { compressImage } from "@/lib/blob"
 interface UploadDropzoneProps {
   courseCode: string
   subjects: { id: string; name: string }[]
+  initialDate?: string
+  initialSubjectId?: string
 }
 
-export function UploadDropzone({ courseCode, subjects }: UploadDropzoneProps) {
+export function UploadDropzone({ courseCode, subjects, initialDate, initialSubjectId }: UploadDropzoneProps) {
   const [files, setFiles] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
-  const [selectedSubject, setSelectedSubject] = useState(subjects[0]?.id || "")
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
+  const [selectedSubject, setSelectedSubject] = useState(initialSubjectId || subjects[0]?.id || "")
+  const [selectedDate, setSelectedDate] = useState(initialDate || new Date().toISOString().split("T")[0])
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
   const router = useRouter()

@@ -5,10 +5,13 @@ import { Camera } from "lucide-react"
 
 export default async function UploadPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ courseCode: string }>
+  searchParams: Promise<{ date?: string; subjectId?: string }>
 }) {
   const { courseCode } = await params
+  const { date, subjectId } = await searchParams
   const course = await getCourseByCode(courseCode)
 
   if (!course) {
@@ -34,6 +37,8 @@ export default async function UploadPage({
       <UploadDropzone
         courseCode={courseCode}
         subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
+        initialDate={date}
+        initialSubjectId={subjectId}
       />
     </div>
   )
