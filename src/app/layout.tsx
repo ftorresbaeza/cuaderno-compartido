@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
+import Script from "next/script";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
@@ -45,6 +46,17 @@ export default function RootLayout({
       <body className="min-h-screen bg-bg-primary text-text-primary font-sans antialiased">
         {children}
         <Toaster />
+        <Script
+          id="pwa-sw"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('/sw.js');
+              }
+            `,
+          }}
+        />
       </body>
     </html>
   );
