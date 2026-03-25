@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { put } from "@vercel/blob"
 import { revalidatePath } from "next/cache"
 import { sendPushToCourse } from "@/lib/webpush"
+import sharp from "sharp"
 
 export async function POST(request: NextRequest) {
   try {
@@ -41,12 +42,18 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        const filename = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, "")}`
-        
-        // Vercel blob can handle File objects directly in most environments
-        const blob = await put(filename, file, {
+        const buffer = Buffer.from(await file.arrayBuffer())
+        const webpBuffer = await sharp(buffer)
+          .resize(1600, 1600, { fit: "inside", withoutEnlargement: true })
+          .webp({ quality: 82 })
+          .toBuffer()
+
+        const baseName = file.name.replace(/\.[^.]+$/, "").replace(/[^a-zA-Z0-9-]/g, "") || "foto"
+        const filename = `${Date.now()}-${baseName}.webp`
+
+        const blob = await put(filename, webpBuffer, {
           access: "public",
-          contentType: file.type,
+          contentType: "image/webp",
         })
 
         await prisma.imageNote.create({
