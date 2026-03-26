@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import {
   Dialog,
@@ -49,6 +49,7 @@ export function CreateEventDialog({
   editEvent,
 }: CreateEventDialogProps) {
   const isEditing = !!editEvent
+  
   const [title, setTitle] = useState(editEvent?.title || "")
   const [description, setDescription] = useState(editEvent?.description || "")
   const [type, setType] = useState<EventType>(editEvent?.type || "TASK")
@@ -56,6 +57,16 @@ export function CreateEventDialog({
   const [subjectId, setSubjectId] = useState(editEvent?.subjectId || "")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
+
+  useEffect(() => {
+    if (open) {
+      setTitle(editEvent?.title || "")
+      setDescription(editEvent?.description || "")
+      setType(editEvent?.type || "TASK")
+      setDate(editEvent?.date || defaultDate || new Date().toISOString().split("T")[0])
+      setSubjectId(editEvent?.subjectId || "")
+    }
+  }, [open, editEvent, defaultDate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
