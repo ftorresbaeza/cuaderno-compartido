@@ -62,17 +62,18 @@ export default async function CoursePage({
     <div className="space-y-6">
       {/* Banner: invitar a loguearse si es anónimo */}
       {!session?.user && (
-        <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-2xl border border-blue-100">
-          <LogIn className="h-5 w-5 text-accent-primary flex-shrink-0" />
-          <p className="text-sm text-blue-800 flex-1 leading-snug">
-            <span className="font-semibold">¿Quieres recordar este curso?</span>{" "}
-            Inicia sesión con Google y aparecerá automáticamente la próxima vez.
+        <div className="rounded-2xl bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-200 p-3 flex items-center gap-3">
+          <Star className="h-5 w-5 text-yellow-500 flex-shrink-0" />
+          <p className="text-sm text-yellow-800 flex-1 leading-snug">
+            <span className="font-semibold">¡Gana puntos y aparece en el ranking!</span>{" "}
+            Inicia sesión para que tus subidas cuenten.
           </p>
           <form action={async () => {
             "use server"
             await signIn("google")
           }}>
-            <button type="submit" className="text-xs font-bold text-accent-primary whitespace-nowrap">
+            <button type="submit" className="flex items-center gap-1 text-xs font-bold text-accent-primary whitespace-nowrap">
+              <LogIn className="h-3.5 w-3.5" />
               Entrar
             </button>
           </form>

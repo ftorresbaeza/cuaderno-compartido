@@ -2,18 +2,19 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, BookOpen, Calendar, Plus } from "lucide-react"
+import { Home, BookOpen, Calendar, Plus, Trophy } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const navItems = [
   { href: "", label: "Inicio", icon: Home },
   { href: "/subjects", label: "Materias", icon: BookOpen },
   { href: "/calendar", label: "Calendario", icon: Calendar },
+  { href: "/ranking", label: "Ranking", icon: Trophy },
 ]
 
 export function BottomNav() {
   const pathname = usePathname()
-  const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload|\/members|\/settings).*$/, "")
+  const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload|\/members|\/settings|\/ranking).*$/, "")
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 bg-bg-card border-t-2 border-border safe-bottom">
@@ -46,7 +47,7 @@ export function BottomNav() {
 
 export function FAB() {
   const pathname = usePathname()
-  const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload|\/members|\/settings).*$/, "")
+  const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload|\/members|\/settings|\/ranking).*$/, "")
 
   // Detectar si estamos en una página de materia: /{courseCode}/subjects/{subjectId}
   const subjectMatch = pathname.match(/\/subjects\/([^/]+)$/)
