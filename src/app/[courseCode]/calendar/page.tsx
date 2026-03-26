@@ -3,6 +3,7 @@ import { getEventsByMonth } from "@/actions/event"
 import { getImagesByMonth } from "@/actions/image"
 import { CalendarClient } from "@/components/calendar/CalendarClient"
 import { Calendar } from "lucide-react"
+import { auth } from "@/auth"
 
 export default async function CalendarPage({
   params,
@@ -10,7 +11,10 @@ export default async function CalendarPage({
   params: Promise<{ courseCode: string }>
 }) {
   const { courseCode } = await params
-  const course = await getCourseByCode(courseCode)
+  const [course, session] = await Promise.all([
+    getCourseByCode(courseCode),
+    auth(),
+  ])
 
   if (!course) {
     return <div>Curso no encontrado</div>
@@ -28,6 +32,7 @@ export default async function CalendarPage({
     type: e.type,
     date: e.date.toISOString(),
     subject: e.subject ? { name: e.subject.name } : undefined,
+    createdBy: e.createdBy,
   }))
 
   const formattedImages = images.map((img) => ({
@@ -44,6 +49,7 @@ export default async function CalendarPage({
       subjects={course.subjects.map((s) => ({ id: s.id, name: s.name }))}
       initialEvents={formattedEvents}
       initialImages={formattedImages}
+      currentUserId={session?.user?.id}
     />
   )
 }

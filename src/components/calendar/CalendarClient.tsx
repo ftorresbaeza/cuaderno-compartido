@@ -22,6 +22,7 @@ interface CalendarEvent {
   subject?: {
     name: string
   }
+  createdBy?: string | null
 }
 
 interface CalendarImage {
@@ -31,24 +32,36 @@ interface CalendarImage {
   imageCount: number
 }
 
+interface EditEvent {
+  id: string
+  title: string
+  description?: string
+  type: "TASK" | "TEST" | "ACTIVITY"
+  date: string
+  subjectId?: string
+}
+
 export function CalendarClient({
   courseId,
   courseCode,
   subjects,
   initialEvents,
   initialImages,
+  currentUserId,
 }: {
   courseId: string
   courseCode: string
   subjects: Subject[]
   initialEvents: CalendarEvent[]
   initialImages: CalendarImage[]
+  currentUserId?: string
 }) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(null)
   const [showEventDialog, setShowEventDialog] = useState(false)
   const [events, setEvents] = useState(initialEvents)
   const [images, setImages] = useState(initialImages)
+  const [editingEvent, setEditingEvent] = useState<EditEvent | null>(null)
 
   useEffect(() => {
     async function fetchData() {
@@ -145,6 +158,8 @@ export function CalendarClient({
         title: evt.title,
         type: evt.type,
         subjectName: evt.subject?.name,
+        subjectId: undefined,
+        createdBy: evt.createdBy,
       }))
 
     return { date, images: dayImages, events: dayEvents }
@@ -152,6 +167,11 @@ export function CalendarClient({
 
   const handleDayClick = (date: Date) => {
     setSelectedDate(date)
+  }
+
+  const handleEditEvent = (event: EditEvent) => {
+    setEditingEvent(event)
+    setShowEventDialog(true)
   }
 
   return (
@@ -201,17 +221,30 @@ export function CalendarClient({
           onViewDay={() => {
             window.location.href = `/${courseCode}?date=${selectedDate?.toISOString().split("T")[0]}`
           }}
+          onEditEvent={handleEditEvent}
           courseCode={courseCode}
+          currentUserId={currentUserId}
         />
       )}
 
       <CreateEventDialog
         open={showEventDialog}
-        onOpenChange={setShowEventDialog}
+        onOpenChange={(open) => {
+          setShowEventDialog(open)
+          if (!open) setEditingEvent(null)
+        }}
         courseId={courseId}
         courseCode={courseCode}
         subjects={subjects}
         defaultDate={selectedDate?.toISOString().split("T")[0]}
+        editEvent={editingEvent ? {
+          id: editingEvent.id,
+          title: editingEvent.title,
+          description: editingEvent.description,
+          type: editingEvent.type,
+          date: editingEvent.date,
+          subjectId: editingEvent.subjectId,
+        } : undefined}
       />
     </div>
   )

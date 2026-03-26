@@ -19,9 +19,22 @@ export async function GET(request: NextRequest) {
       courseId,
       date: { gte: startDate, lte: endDate },
     },
-    include: { subject: true },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      type: true,
+      date: true,
+      createdBy: true,
+      subject: {
+        select: { id: true, name: true },
+      },
+    },
     orderBy: { date: "asc" },
   })
 
-  return NextResponse.json(events)
+  return NextResponse.json(events.map(e => ({
+    ...e,
+    subject: e.subject || undefined,
+  })))
 }

@@ -1,8 +1,16 @@
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { CheckCircle, AlertCircle, Star, Image } from "lucide-react"
-import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+
+interface DayEvent {
+  id: string
+  title: string
+  type: "TASK" | "TEST" | "ACTIVITY"
+  subjectName?: string
+  subjectId?: string
+  createdBy?: string | null
+}
 
 interface DaySummary {
   date: Date
@@ -11,19 +19,24 @@ interface DaySummary {
     subjectName: string
     count: number
   }[]
-  events: {
-    id: string
-    title: string
-    type: "TASK" | "TEST" | "ACTIVITY"
-    subjectName?: string
-  }[]
+  events: DayEvent[]
 }
 
 interface DayPopoverProps {
   summary: DaySummary | null
   onClose: () => void
   onViewDay: () => void
+  onEditEvent?: (event: {
+    id: string
+    title: string
+    description?: string
+    type: "TASK" | "TEST" | "ACTIVITY"
+    date: string
+    subjectName?: string
+    subjectId?: string
+  }) => void
   courseCode: string
+  currentUserId?: string
 }
 
 const eventIcons = {
@@ -38,7 +51,7 @@ const eventColors = {
   ACTIVITY: "text-blue-600 bg-blue-50",
 }
 
-export function DayPopover({ summary, onClose, onViewDay, courseCode }: DayPopoverProps) {
+export function DayPopover({ summary, onClose, onViewDay, onEditEvent, courseCode, currentUserId }: DayPopoverProps) {
   if (!summary) return null
 
   const hasContent = summary.images.length > 0 || summary.events.length > 0
@@ -88,6 +101,7 @@ export function DayPopover({ summary, onClose, onViewDay, courseCode }: DayPopov
                   <div className="space-y-2">
                     {summary.events.map((event) => {
                       const Icon = eventIcons[event.type]
+                      const canEdit = currentUserId && event.createdBy === currentUserId
                       return (
                         <div
                           key={event.id}
@@ -106,6 +120,24 @@ export function DayPopover({ summary, onClose, onViewDay, courseCode }: DayPopov
                               </p>
                             )}
                           </div>
+                          {canEdit && onEditEvent && (
+                            <button
+                              onClick={() => onEditEvent({
+                                id: event.id,
+                                title: event.title,
+                                type: event.type,
+                                date: format(summary.date, "yyyy-MM-dd"),
+                                subjectName: event.subjectName,
+                                subjectId: event.subjectId,
+                              })}
+                              className="p-2 text-text-muted hover:text-accent-primary transition-colors"
+                              title="Editar"
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                              </svg>
+                            </button>
+                          )}
                         </div>
                       )
                     })}
