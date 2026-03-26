@@ -22,6 +22,7 @@ model User {
   activities    UserActivity[]
   pushSubscriptions PushSubscription[]
   givenThanks   ImageThanks[]
+  createdEvents Event[]
 }
 
 model Account {
@@ -128,15 +129,18 @@ model ImageThanks {
 }
 
 model Event {
-  id        String    @id @default(cuid())
-  title     String
-  type      EventType
-  date      DateTime  @db.Date
-  courseId  String
-  course    Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  subjectId String?
-  subject   Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
-  createdAt DateTime  @default(now())
+  id          String    @id @default(cuid())
+  title       String
+  description String?   @db.Text
+  type        EventType
+  date        DateTime  @db.Date
+  courseId    String
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  subjectId   String?
+  subject     Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  createdBy   String?
+  creator     User?     @relation(fields: [createdBy], references: [id], onDelete: SetNull)
+  createdAt   DateTime  @default(now())
   
   @@index([courseId, date])
 }

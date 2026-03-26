@@ -10,7 +10,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { createEvent } from "@/actions/event"
+import { createEvent, updateEvent } from "@/actions/event"
 import { toast } from "@/hooks/use-toast"
 import { CheckCircle, AlertCircle, Star } from "lucide-react"
 
@@ -23,6 +23,14 @@ interface CreateEventDialogProps {
   courseCode: string
   subjects: { id: string; name: string }[]
   defaultDate?: string
+  editEvent?: {
+    id: string
+    title: string
+    description?: string
+    type: EventType
+    date: string
+    subjectId?: string
+  }
 }
 
 const eventTypes: { type: EventType; label: string; icon: typeof CheckCircle }[] = [
@@ -38,11 +46,14 @@ export function CreateEventDialog({
   courseCode,
   subjects,
   defaultDate,
+  editEvent,
 }: CreateEventDialogProps) {
-  const [title, setTitle] = useState("")
-  const [type, setType] = useState<EventType>("TASK")
-  const [date, setDate] = useState(defaultDate || new Date().toISOString().split("T")[0])
-  const [subjectId, setSubjectId] = useState("")
+  const isEditing = !!editEvent
+  const [title, setTitle] = useState(editEvent?.title || "")
+  const [description, setDescription] = useState(editEvent?.description || "")
+  const [type, setType] = useState<EventType>(editEvent?.type || "TASK")
+  const [date, setDate] = useState(editEvent?.date || defaultDate || new Date().toISOString().split("T")[0])
+  const [subjectId, setSubjectId] = useState(editEvent?.subjectId || "")
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
@@ -51,19 +62,33 @@ export function CreateEventDialog({
     if (!title.trim()) return
 
     setIsLoading(true)
-    const result = await createEvent({
-      title,
-      type,
-      date: new Date(date),
-      courseId,
-      subjectId: subjectId || undefined,
-    })
+
+    let result
+    if (isEditing) {
+      result = await updateEvent(editEvent.id, {
+        title,
+        description,
+        type,
+        date: new Date(date),
+        subjectId: subjectId || undefined,
+      })
+    } else {
+      result = await createEvent({
+        title,
+        description,
+        type,
+        date: new Date(date),
+        courseId,
+        subjectId: subjectId || undefined,
+      })
+    }
 
     if (result.error) {
       toast({ title: "Error", description: result.error, variant: "destructive" })
     } else {
-      toast({ title: "Éxito", description: "Evento creado correctamente" })
+      toast({ title: "Éxito", description: isEditing ? "Evento actualizado" : "Evento creado correctamente" })
       setTitle("")
+      setDescription("")
       setType("TASK")
       onOpenChange(false)
       router.refresh()
@@ -75,7 +100,7 @@ export function CreateEventDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Nuevo evento</DialogTitle>
+          <DialogTitle>{isEditing ? "Editar evento" : "Nuevo evento"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -125,6 +150,19 @@ export function CreateEventDialog({
 
           <div>
             <label className="block text-sm font-medium text-text-secondary mb-1.5">
+              Descripción (opcional)
+            </label>
+            <textarea
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Detalles del evento, contenido, etc."
+              rows={3}
+              className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors resize-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-text-secondary mb-1.5">
               Fecha
             </label>
             <input
@@ -162,7 +200,10 @@ export function CreateEventDialog({
               Cancelar
             </Button>
             <Button type="submit" disabled={isLoading || !title.trim()}>
-              {isLoading ? "Creando..." : "Crear evento"}
+              {isLoading
+                ? isEditing ? "Guardando..." : "Creando..."
+                : isEditing ? "Guardar" : "Crear evento"
+              }
             </Button>
           </DialogFooter>
         </form>

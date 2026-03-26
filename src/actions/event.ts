@@ -9,6 +9,7 @@ export type EventType = "TASK" | "TEST" | "ACTIVITY"
 
 export interface CreateEventInput {
   title: string
+  description?: string
   type: EventType
   date: Date
   courseId: string
@@ -24,14 +25,19 @@ export async function createEvent(input: CreateEventInput) {
     return { error: "La fecha es requerida" }
   }
 
+  const session = await auth()
+  if (!session?.user?.id) return { error: "No autorizado" }
+
   try {
     const event = await prisma.event.create({
       data: {
         title: input.title.trim(),
+        description: input.description?.trim() || null,
         type: input.type,
         date: input.date,
         courseId: input.courseId,
         subjectId: input.subjectId || null,
+        createdBy: session.user.id,
       },
       include: { subject: true, course: true },
     })
@@ -49,18 +55,46 @@ export async function createEvent(input: CreateEventInput) {
       url: `/${event.course?.code ?? input.courseId}/calendar`,
     }).catch(() => {/* no bloquear si falla el push */})
 
-    const session = await auth()
-    if (session?.user?.id) {
-      await prisma.userActivity.create({
-        data: { userId: session.user.id, courseId: input.courseId, type: "CREATE_EVENT" },
-      })
-    }
+    await prisma.userActivity.create({
+      data: { userId: session.user.id, courseId: input.courseId, type: "CREATE_EVENT" },
+    })
 
     revalidatePath("/")
     return { success: true, event }
   } catch (error) {
     console.error("Error creating event:", error)
     return { error: "Error al crear el evento" }
+  }
+}
+
+export async function updateEvent(eventId: string, input: Partial<CreateEventInput>) {
+  const session = await auth()
+  if (!session?.user?.id) return { error: "No autorizado" }
+
+  const existing = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { createdBy: true },
+  })
+  if (!existing) return { error: "Evento no encontrado" }
+  if (existing.createdBy !== session.user.id) return { error: "Solo puedes editar eventos que tú creaste" }
+
+  try {
+    const event = await prisma.event.update({
+      where: { id: eventId },
+      data: {
+        ...(input.title && { title: input.title.trim() }),
+        ...(input.description !== undefined && { description: input.description?.trim() || null }),
+        ...(input.type && { type: input.type }),
+        ...(input.date && { date: input.date }),
+        ...(input.subjectId !== undefined && { subjectId: input.subjectId || null }),
+      },
+    })
+
+    revalidatePath("/")
+    return { success: true, event }
+  } catch (error) {
+    console.error("Error updating event:", error)
+    return { error: "Error al actualizar el evento" }
   }
 }
 
@@ -96,6 +130,16 @@ export async function getEventsByMonth(courseId: string, year: number, month: nu
 }
 
 export async function deleteEvent(eventId: string) {
+  const session = await auth()
+  if (!session?.user?.id) return { error: "No autorizado" }
+
+  const existing = await prisma.event.findUnique({
+    where: { id: eventId },
+    select: { createdBy: true },
+  })
+  if (!existing) return { error: "Evento no encontrado" }
+  if (existing.createdBy !== session.user.id) return { error: "Solo puedes eliminar eventos que tú creaste" }
+
   try {
     await prisma.event.delete({ where: { id: eventId } })
     revalidatePath("/")
