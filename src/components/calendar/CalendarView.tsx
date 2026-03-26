@@ -30,7 +30,7 @@ export function CalendarView({
   const monthEnd = endOfMonth(currentMonth)
   const calendarDays = eachDayOfInterval({ start: monthStart, end: monthEnd })
 
-  const startPadding = monthStart.getDay()
+  const startPadding = (monthStart.getDay() + 6) % 7
   const paddedDays = Array(startPadding).fill(null).concat(calendarDays)
 
   const weeks: (Date | null)[][] = []
@@ -43,7 +43,7 @@ export function CalendarView({
     return days.find((d) => isSameDay(d.date, date))
   }
 
-  const weekDays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"]
+  const weekDays = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"]
 
   return (
     <div className="bg-bg-card rounded-2xl border-2 border-border overflow-hidden">

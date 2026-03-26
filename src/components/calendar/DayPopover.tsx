@@ -1,11 +1,12 @@
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CheckCircle, AlertCircle, Star, Image } from "lucide-react"
+import { CheckCircle, AlertCircle, Star, Image, Trash2, CalendarPlus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface DayEvent {
   id: string
   title: string
+  description?: string | null
   type: "TASK" | "TEST" | "ACTIVITY"
   subjectName?: string
   subjectId?: string
@@ -35,6 +36,8 @@ interface DayPopoverProps {
     subjectName?: string
     subjectId?: string
   }) => void
+  onCreateEvent?: (date: Date) => void
+  onDeleteEvent?: (eventId: string) => void
   courseCode: string
   currentUserId?: string
 }
@@ -51,7 +54,7 @@ const eventColors = {
   ACTIVITY: "text-blue-600 bg-blue-50",
 }
 
-export function DayPopover({ summary, onClose, onViewDay, onEditEvent, courseCode, currentUserId }: DayPopoverProps) {
+export function DayPopover({ summary, onClose, onViewDay, onEditEvent, onCreateEvent, onDeleteEvent, courseCode, currentUserId }: DayPopoverProps) {
   if (!summary) return null
 
   const hasContent = summary.images.length > 0 || summary.events.length > 0
@@ -125,6 +128,7 @@ export function DayPopover({ summary, onClose, onViewDay, onEditEvent, courseCod
                               onClick={() => onEditEvent({
                                 id: event.id,
                                 title: event.title,
+                                description: event.description || "",
                                 type: event.type,
                                 date: format(summary.date, "yyyy-MM-dd"),
                                 subjectName: event.subjectName,
@@ -136,6 +140,15 @@ export function DayPopover({ summary, onClose, onViewDay, onEditEvent, courseCod
                               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                               </svg>
+                            </button>
+                          )}
+                          {canEdit && onDeleteEvent && (
+                            <button
+                              onClick={() => onDeleteEvent(event.id)}
+                              className="p-2 text-text-muted hover:text-red-500 transition-colors"
+                              title="Eliminar"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </button>
                           )}
                         </div>
@@ -151,14 +164,24 @@ export function DayPopover({ summary, onClose, onViewDay, onEditEvent, courseCod
                 No hay contenido este día
               </p>
               <p className="text-text-muted text-sm mt-1">
-                ¿Quieres subir algo?
+                ¿Quieres subir algo o crear un evento?
               </p>
             </div>
           )}
         </div>
 
-        <div className="p-4 border-t border-border">
-          <Button onClick={onViewDay} className="w-full">
+        <div className="p-4 border-t border-border flex gap-2">
+          {onCreateEvent && (
+            <Button 
+              onClick={() => onCreateEvent(summary.date)} 
+              variant="outline"
+              className="flex-1 gap-2"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              Crear Evento
+            </Button>
+          )}
+          <Button onClick={onViewDay} className="flex-1">
             {hasContent ? "Ver todo" : "Subir imágenes"}
           </Button>
         </div>

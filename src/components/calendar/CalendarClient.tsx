@@ -17,6 +17,7 @@ interface Subject {
 interface CalendarEvent {
   id: string
   title: string
+  description?: string | null
   type: "TASK" | "TEST" | "ACTIVITY"
   date: string
   subject?: {
@@ -156,6 +157,7 @@ export function CalendarClient({
       .map((evt) => ({
         id: evt.id,
         title: evt.title,
+        description: evt.description,
         type: evt.type,
         subjectName: evt.subject?.name,
         subjectId: undefined,
@@ -172,6 +174,28 @@ export function CalendarClient({
   const handleEditEvent = (event: EditEvent) => {
     setEditingEvent(event)
     setShowEventDialog(true)
+  }
+
+  const handleCreateEvent = (date: Date) => {
+    setEditingEvent(null)
+    setSelectedDate(date)
+    setShowEventDialog(true)
+  }
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (!confirm("¿Estás seguro de eliminar este evento?")) return
+    
+    try {
+      const res = await fetch(`/api/events/${eventId}`, { method: "DELETE" })
+      if (res.ok) {
+        setEvents(events.filter(e => e.id !== eventId))
+        if (selectedDate) {
+          setSelectedDate(selectedDate)
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting event:", error)
+    }
   }
 
   return (
@@ -222,6 +246,8 @@ export function CalendarClient({
             window.location.href = `/${courseCode}?date=${selectedDate?.toISOString().split("T")[0]}`
           }}
           onEditEvent={handleEditEvent}
+          onCreateEvent={handleCreateEvent}
+          onDeleteEvent={handleDeleteEvent}
           courseCode={courseCode}
           currentUserId={currentUserId}
         />
