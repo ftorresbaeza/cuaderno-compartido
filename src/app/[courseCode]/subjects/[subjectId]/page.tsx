@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { getSubjectWithImages } from "@/actions/subject"
-import { deleteImageAdmin } from "@/actions/image"
+import { deleteImageAdmin, getThanksForImages } from "@/actions/image"
 import { ImageGrid } from "@/components/image/ImageGrid"
 import { Card, CardContent } from "@/components/ui/card"
 import { BookOpen, Image, Calendar } from "lucide-react"
@@ -28,6 +28,10 @@ export default async function SubjectPage({
   const isSuperAdmin = session?.user?.email === SUPER_ADMIN_EMAIL
   const membership = subject.course.members?.find((m: { userId: string; role: string }) => m.userId === session?.user?.id)
   const canDelete = isSuperAdmin || membership?.role === "OWNER" || membership?.role === "ADMIN"
+
+  // Obtener gracias por imagen
+  const imageIds = images.map((img: { id: string }) => img.id)
+  const thanksData = await getThanksForImages(imageIds, session?.user?.id)
 
   return (
     <div className="space-y-6">
@@ -61,6 +65,7 @@ export default async function SubjectPage({
         <ImageGrid
           images={images}
           currentUserId={session?.user?.id}
+          thanksData={thanksData}
           onDelete={canDelete ? deleteImageAdmin : undefined}
         />
       </div>

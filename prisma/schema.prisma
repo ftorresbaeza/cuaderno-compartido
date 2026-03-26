@@ -21,6 +21,7 @@ model User {
   uploadedNotes ImageNote[]
   activities    UserActivity[]
   pushSubscriptions PushSubscription[]
+  givenThanks   ImageThanks[]
 }
 
 model Account {
@@ -107,9 +108,23 @@ model ImageNote {
   uploaderId String?
   rotation   Int      @default(0)
   createdAt  DateTime @default(now())
+  thanks     ImageThanks[]
   
   @@index([subjectId, date])
   @@index([date])
+}
+
+model ImageThanks {
+  id        String   @id @default(cuid())
+  imageId   String
+  image     ImageNote @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@unique([imageId, userId])
+  @@index([imageId])
+  @@index([userId])
 }
 
 model Event {
@@ -167,4 +182,6 @@ enum ActivityType {
   CREATE_EVENT
   REQUEST_IMAGES
   SHARE_LINK
+  SEND_THANKS
+  RECEIVE_THANKS
 }

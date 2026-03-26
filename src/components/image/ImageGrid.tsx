@@ -29,10 +29,11 @@ interface ImageGridProps {
   images: ImageNote[]
   isLoading?: boolean
   currentUserId?: string
+  thanksData?: Record<string, { count: number; thankedByMe: boolean }>
   onDelete?: (imageId: string) => Promise<{ success?: boolean; error?: string }>
 }
 
-export function ImageGrid({ images, isLoading, currentUserId, onDelete }: ImageGridProps) {
+export function ImageGrid({ images, isLoading, currentUserId, thanksData, onDelete }: ImageGridProps) {
   const [activeDateKey, setActiveDateKey] = useState<string | null>(null)
   const [activeIndex, setActiveIndex] = useState<number>(0)
   const [deleting, setDeleting] = useState(false)
@@ -41,7 +42,26 @@ export function ImageGrid({ images, isLoading, currentUserId, onDelete }: ImageG
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
   const [thanking, setThanking] = useState(false)
-  const [thanked, setThanked] = useState<Record<string, boolean>>({})
+  const [thanked, setThanked] = useState<Record<string, boolean>>(
+    () => {
+      if (!thanksData) return {}
+      const initial: Record<string, boolean> = {}
+      for (const [id, data] of Object.entries(thanksData)) {
+        if (data.thankedByMe) initial[id] = true
+      }
+      return initial
+    }
+  )
+  const [thanksCount, setThanksCount] = useState<Record<string, number>>(
+    () => {
+      if (!thanksData) return {}
+      const initial: Record<string, number> = {}
+      for (const [id, data] of Object.entries(thanksData)) {
+        initial[id] = data.count
+      }
+      return initial
+    }
+  )
   const [rotating, setRotating] = useState(false)
   const [localRotation, setLocalRotation] = useState<Record<string, number>>({})
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
@@ -380,6 +400,33 @@ export function ImageGrid({ images, isLoading, currentUserId, onDelete }: ImageG
                 <X className="h-5 w-5 text-white" />
               </button>
 
+              {/* Gracias - arriba izquierda */}
+              <button
+                disabled={thanking || thanked[selectedImage.id]}
+                onClick={async () => {
+                  setThanking(true)
+                  const result = await sendThanks(selectedImage.id)
+                  if (result.success) {
+                    setThanked((prev) => ({ ...prev, [selectedImage.id]: true }))
+                    setThanksCount((prev) => ({ ...prev, [selectedImage.id]: (prev[selectedImage.id] || 0) + 1 }))
+                  }
+                  setThanking(false)
+                }}
+                className={cn(
+                  "absolute top-4 left-4 flex items-center gap-1 px-2.5 py-2 rounded-full transition-all z-10",
+                  thanked[selectedImage.id]
+                    ? "bg-pink-600/60 text-white"
+                    : "bg-white/10 hover:bg-pink-600/50 text-white active:scale-90",
+                  thanking && "animate-pulse"
+                )}
+                title={thanked[selectedImage.id] ? "Ya agradeciste" : "¡Gracias!"}
+              >
+                <Heart className={cn("h-5 w-5", thanked[selectedImage.id] && "fill-current")} />
+                {(thanksCount[selectedImage.id] || 0) > 0 && (
+                  <span className="text-xs font-medium">{thanksCount[selectedImage.id]}</span>
+                )}
+              </button>
+
               {/* Contador */}
               {activeGroup.length > 1 && (
                 <div className="absolute top-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-black/40 text-white text-xs font-medium">
@@ -466,27 +513,6 @@ export function ImageGrid({ images, isLoading, currentUserId, onDelete }: ImageG
                 </button>
               )}
 
-              {/* Gracias */}
-              <button
-                disabled={thanking || thanked[selectedImage.id]}
-                onClick={async () => {
-                  setThanking(true)
-                  const result = await sendThanks(selectedImage.id)
-                  if (result.success) {
-                    setThanked((prev) => ({ ...prev, [selectedImage.id]: true }))
-                  }
-                  setThanking(false)
-                }}
-                className={cn(
-                  "absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-medium transition-all z-10",
-                  thanked[selectedImage.id]
-                    ? "bg-pink-600/60"
-                    : "bg-pink-600/80 hover:bg-pink-600 active:scale-95"
-                )}
-              >
-                <Heart className={cn("h-4 w-4", thanked[selectedImage.id] && "fill-current")} />
-                {thanking ? "Enviando…" : thanked[selectedImage.id] ? "Enviado" : "¡Gracias!"}
-              </button>
             </div>
           )}
         </DialogContent>

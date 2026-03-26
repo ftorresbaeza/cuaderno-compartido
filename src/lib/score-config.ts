@@ -4,4 +4,6 @@ export const POINTS: Record<string, number> = {
   CREATE_EVENT: 8,
   REQUEST_IMAGES: 5,
   SHARE_LINK: 3,
+  SEND_THANKS: 1,
+  RECEIVE_THANKS: 3,
 }

@@ -206,10 +206,33 @@ export async function sendThanks(imageId: string) {
   if (!image.uploaderId) return { error: "No se puede enviar gracias (autor desconocido)" }
   if (image.uploaderId === session.user.id) return { error: "No puedes enviarte gracias a ti mismo" }
 
+  // Verificar si ya dio gracias
+  const existing = await prisma.imageThanks.findUnique({
+    where: { imageId_userId: { imageId, userId: session.user.id } },
+  })
+  if (existing) return { error: "Ya agradeciste esta imagen" }
+
+  const courseId = image.subject.courseId
   const senderName = session.user.name || "Alguien"
   const subjectName = image.subject.name
   const courseCode = image.subject.course.code
 
+  // Registrar el gracias
+  await prisma.imageThanks.create({
+    data: { imageId, userId: session.user.id },
+  })
+
+  // Registrar puntos de gamificación
+  await Promise.all([
+    prisma.userActivity.create({
+      data: { userId: session.user.id, courseId, type: "SEND_THANKS" },
+    }),
+    prisma.userActivity.create({
+      data: { userId: image.uploaderId, courseId, type: "RECEIVE_THANKS" },
+    }),
+  ])
+
+  // Notificación push (no bloqueante)
   const { sendPushToUser } = await import("@/lib/webpush")
   sendPushToUser(image.uploaderId, image.subject.courseId, {
     title: `${senderName} te agradece`,
@@ -217,7 +240,37 @@ export async function sendThanks(imageId: string) {
     url: `/${courseCode}/subjects/${image.subjectId}`,
   }).catch(() => {/* no bloquear si falla */})
 
-  return { success: true }
+  return { success: true, thanksCount: 1 }
+}
+
+export async function getThanksForImages(imageIds: string[], userId?: string) {
+  if (imageIds.length === 0) return {}
+  
+  const thanks = await prisma.imageThanks.groupBy({
+    by: ["imageId"],
+    where: { imageId: { in: imageIds } },
+    _count: { id: true },
+  })
+
+  let userThanks: string[] = []
+  if (userId) {
+    const given = await prisma.imageThanks.findMany({
+      where: { imageId: { in: imageIds }, userId },
+      select: { imageId: true },
+    })
+    userThanks = given.map((t) => t.imageId)
+  }
+
+  const result: Record<string, { count: number; thankedByMe: boolean }> = {}
+  for (const t of thanks) {
+    result[t.imageId] = { count: t._count.id, thankedByMe: userThanks.includes(t.imageId) }
+  }
+  for (const id of imageIds) {
+    if (!result[id]) {
+      result[id] = { count: 0, thankedByMe: false }
+    }
+  }
+  return result
 }
 
 export async function rotateImage(imageId: string) {
