@@ -143,6 +143,28 @@ export async function deleteImageAdmin(imageId: string) {
   }
 }
 
+export async function deleteOwnImage(imageId: string) {
+  const { auth } = await import("@/auth")
+  const session = await auth()
+  if (!session?.user?.id) return { error: "No autorizado" }
+
+  const image = await prisma.imageNote.findUnique({
+    where: { id: imageId },
+    select: { uploaderId: true, url: true },
+  })
+  if (!image) return { error: "Imagen no encontrada" }
+  if (image.uploaderId !== session.user.id) return { error: "Solo puedes eliminar tus propias imágenes" }
+
+  try {
+    await prisma.imageNote.delete({ where: { id: imageId } })
+    revalidatePath(`/[courseCode]`, "layout")
+    return { success: true, url: image.url }
+  } catch (error) {
+    console.error("Error deleting image:", error)
+    return { error: "Error al eliminar la imagen" }
+  }
+}
+
 export async function cleanupOldImages() {
   const cutoffDate = new Date()
   cutoffDate.setDate(cutoffDate.getDate() - 90)
@@ -161,4 +183,60 @@ export async function cleanupOldImages() {
   })
 
   return { deleted: oldImages.length }
+}
+
+export async function sendThanks(imageId: string) {
+  const { auth } = await import("@/auth")
+  const session = await auth()
+  if (!session?.user?.id) return { error: "No autorizado" }
+
+  const image = await prisma.imageNote.findUnique({
+    where: { id: imageId },
+    include: {
+      uploader: { select: { name: true } },
+      subject: {
+        include: {
+          course: { select: { id: true, code: true } },
+        },
+      },
+    },
+  })
+
+  if (!image) return { error: "Imagen no encontrada" }
+  if (!image.uploaderId) return { error: "No se puede enviar gracias (autor desconocido)" }
+  if (image.uploaderId === session.user.id) return { error: "No puedes enviarte gracias a ti mismo" }
+
+  const senderName = session.user.name || "Alguien"
+  const subjectName = image.subject.name
+  const courseCode = image.subject.course.code
+
+  const { sendPushToUser } = await import("@/lib/webpush")
+  sendPushToUser(image.uploaderId, image.subject.courseId, {
+    title: `${senderName} te agradece`,
+    body: `Por tu foto de ${subjectName}`,
+    url: `/${courseCode}/subjects/${image.subjectId}`,
+  }).catch(() => {/* no bloquear si falla */})
+
+  return { success: true }
+}
+
+export async function rotateImage(imageId: string) {
+  const { auth } = await import("@/auth")
+  const session = await auth()
+  if (!session?.user?.id) return { error: "No autorizado" }
+
+  const image = await prisma.imageNote.findUnique({
+    where: { id: imageId },
+  })
+  if (!image) return { error: "Imagen no encontrada" }
+
+  const newRotation = (image.rotation + 90) % 360
+
+  await prisma.imageNote.update({
+    where: { id: imageId },
+    data: { rotation: newRotation },
+  })
+
+  revalidatePath(`/[courseCode]`, "layout")
+  return { success: true, rotation: newRotation }
 }

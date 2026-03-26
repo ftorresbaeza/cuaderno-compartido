@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { put } from "@vercel/blob"
 import { revalidatePath } from "next/cache"
 import { sendPushToCourse } from "@/lib/webpush"
+import { auth } from "@/auth"
 import sharp from "sharp"
 
 export async function POST(request: NextRequest) {
@@ -28,6 +29,9 @@ export async function POST(request: NextRequest) {
     if (!subject) {
       return NextResponse.json({ error: "Subject not found" }, { status: 404 })
     }
+
+    const session = await auth()
+    const uploaderId = session?.user?.id || null
 
     const date = dateStr ? new Date(dateStr) : new Date()
     date.setHours(12, 0, 0, 0)
@@ -61,7 +65,7 @@ export async function POST(request: NextRequest) {
             url: blob.url,
             subjectId,
             date,
-            uploaderId: null,
+            uploaderId,
           },
         })
 

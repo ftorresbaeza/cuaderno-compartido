@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 import { prisma } from "@/lib/prisma"
+import { auth } from "@/auth"
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -24,10 +25,13 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Missing fields" }, { status: 400 })
   }
 
+  const session = await auth()
+  const userId = session?.user?.id || null
+
   await prisma.pushSubscription.upsert({
     where: { endpoint_courseId: { endpoint, courseId } },
-    create: { endpoint, p256dh: keys.p256dh, auth: keys.auth, courseId },
-    update: { p256dh: keys.p256dh, auth: keys.auth },
+    create: { endpoint, p256dh: keys.p256dh, auth: keys.auth, courseId, userId },
+    update: { p256dh: keys.p256dh, auth: keys.auth, userId },
   })
 
   return NextResponse.json({ success: true })

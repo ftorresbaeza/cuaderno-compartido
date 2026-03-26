@@ -2,26 +2,36 @@
 
 import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { Camera, Image, X, Upload, Loader2, Check } from "lucide-react"
+import { Camera, Image, X, Upload, Loader2, Trophy, LogIn } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { toast } from "@/hooks/use-toast"
 import { compressImage } from "@/lib/blob"
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 
 interface UploadDropzoneProps {
   courseCode: string
+  courseId: string
   subjects: { id: string; name: string }[]
   initialDate?: string
   initialSubjectId?: string
+  isLoggedIn: boolean
 }
 
-export function UploadDropzone({ courseCode, subjects, initialDate, initialSubjectId }: UploadDropzoneProps) {
+export function UploadDropzone({ courseCode, courseId, subjects, initialDate, initialSubjectId, isLoggedIn }: UploadDropzoneProps) {
   const [files, setFiles] = useState<File[]>([])
   const [previews, setPreviews] = useState<string[]>([])
   const [selectedSubject, setSelectedSubject] = useState(initialSubjectId || subjects[0]?.id || "")
   const [selectedDate, setSelectedDate] = useState(initialDate || new Date().toISOString().split("T")[0])
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [showGamifyDialog, setShowGamifyDialog] = useState(false)
+  const [hasSeenGamifyPrompt, setHasSeenGamifyPrompt] = useState(false)
   const router = useRouter()
 
   const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
@@ -42,7 +52,7 @@ export function UploadDropzone({ courseCode, subjects, initialDate, initialSubje
     setPreviews(newPreviews)
   }
 
-  const handleUpload = async () => {
+  const doUpload = async () => {
     if (files.length === 0 || !selectedSubject) {
       toast({ title: "Error", description: "Selecciona imágenes y una asignatura", variant: "destructive" })
       return
@@ -83,128 +93,180 @@ export function UploadDropzone({ courseCode, subjects, initialDate, initialSubje
     }
   }
 
+  const handleUpload = async () => {
+    if (!isLoggedIn && !hasSeenGamifyPrompt) {
+      setShowGamifyDialog(true)
+      return
+    }
+    await doUpload()
+  }
+
+  const handleGamifyAccept = () => {
+    setShowGamifyDialog(false)
+    setHasSeenGamifyPrompt(true)
+    router.push(`/?redirect=/${courseCode}/upload`)
+  }
+
+  const handleGamifyDecline = () => {
+    setShowGamifyDialog(false)
+    setHasSeenGamifyPrompt(true)
+    doUpload()
+  }
+
   return (
-    <div className="space-y-6">
-      <Card>
-        <CardContent className="p-4 grid grid-cols-2 gap-3">
-          <label className="cursor-pointer">
-            <div className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent-primary hover:bg-blue-50/50 transition-all h-32 active:scale-95 text-center">
-              <Camera className="h-8 w-8 text-text-secondary mb-2" />
-              <p className="text-text-secondary font-semibold text-sm leading-tight">Tomar<br/>Foto</p>
-            </div>
-            <input
-              type="file"
-              accept="image/*"
-              capture="environment"
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-          </label>
-
-          <label className="cursor-pointer">
-            <div className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent-primary hover:bg-blue-50/50 transition-all h-32 active:scale-95 text-center">
-              <Image className="h-8 w-8 text-text-secondary mb-2" />
-              <p className="text-text-secondary font-semibold text-sm leading-tight">Desde<br/>Galería</p>
-            </div>
-            <input
-              type="file"
-              accept="image/*"
-              multiple
-              onChange={handleFileSelect}
-              className="hidden"
-            />
-          </label>
-        </CardContent>
-      </Card>
-
-      {previews.length > 0 && (
+    <>
+      <div className="space-y-6">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex justify-between items-center mb-3">
-              <span className="text-sm font-medium text-text-secondary">
-                {files.length} imagen(es) seleccionada(s)
-              </span>
+          <CardContent className="p-4 grid grid-cols-2 gap-3">
+            <label className="cursor-pointer">
+              <div className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent-primary hover:bg-blue-50/50 transition-all h-32 active:scale-95 text-center">
+                <Camera className="h-8 w-8 text-text-secondary mb-2" />
+                <p className="text-text-secondary font-semibold text-sm leading-tight">Tomar<br/>Foto</p>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </label>
+
+            <label className="cursor-pointer">
+              <div className="border-2 border-dashed border-border rounded-xl p-4 flex flex-col items-center justify-center hover:border-accent-primary hover:bg-blue-50/50 transition-all h-32 active:scale-95 text-center">
+                <Image className="h-8 w-8 text-text-secondary mb-2" />
+                <p className="text-text-secondary font-semibold text-sm leading-tight">Desde<br/>Galería</p>
+              </div>
+              <input
+                type="file"
+                accept="image/*"
+                multiple
+                onChange={handleFileSelect}
+                className="hidden"
+              />
+            </label>
+          </CardContent>
+        </Card>
+
+        {previews.length > 0 && (
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex justify-between items-center mb-3">
+                <span className="text-sm font-medium text-text-secondary">
+                  {files.length} imagen(es) seleccionada(s)
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {previews.map((preview, index) => (
+                  <div key={index} className="relative aspect-square">
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <button
+                      onClick={() => removeFile(index)}
+                      className="absolute -top-2 -right-2 p-1 bg-danger text-white rounded-full shadow-md hover:bg-red-700 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Card>
+          <CardContent className="p-4 space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">
+                Asignatura
+              </label>
+              <select
+                value={selectedSubject}
+                onChange={(e) => setSelectedSubject(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors bg-white"
+                disabled={subjects.length === 0}
+              >
+                {subjects.length === 0 ? (
+                  <option value="">Crea una asignatura primero</option>
+                ) : (
+                  subjects.map((subject) => (
+                    <option key={subject.id} value={subject.id}>
+                      {subject.name}
+                    </option>
+                  ))
+                )}
+              </select>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {previews.map((preview, index) => (
-                <div key={index} className="relative aspect-square">
-                  <img
-                    src={preview}
-                    alt={`Preview ${index + 1}`}
-                    className="w-full h-full object-cover rounded-lg"
-                  />
-                  <button
-                    onClick={() => removeFile(index)}
-                    className="absolute -top-2 -right-2 p-1 bg-danger text-white rounded-full shadow-md hover:bg-red-700 transition-colors"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
+
+            <div>
+              <label className="block text-sm font-medium text-text-secondary mb-1.5">
+                Fecha
+              </label>
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors"
+              />
             </div>
           </CardContent>
         </Card>
-      )}
 
-      <Card>
-        <CardContent className="p-4 space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">
-              Asignatura
-            </label>
-            <select
-              value={selectedSubject}
-              onChange={(e) => setSelectedSubject(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors bg-white"
-              disabled={subjects.length === 0}
+        {files.length > 0 && (
+          <>
+            <Button
+              onClick={handleUpload}
+              disabled={isUploading || files.length === 0 || !selectedSubject}
+              className="w-full h-12 text-base"
             >
-              {subjects.length === 0 ? (
-                <option value="">Crea una asignatura primero</option>
+              {isUploading ? (
+                <>
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                  Subiendo... {uploadProgress}%
+                </>
               ) : (
-                subjects.map((subject) => (
-                  <option key={subject.id} value={subject.id}>
-                    {subject.name}
-                  </option>
-                ))
+                <>
+                  <Upload className="h-5 w-5" />
+                  Subir {files.length} imagen(es)
+                </>
               )}
-            </select>
-          </div>
+            </Button>
+          </>
+        )}
+      </div>
 
-          <div>
-            <label className="block text-sm font-medium text-text-secondary mb-1.5">
-              Fecha
-            </label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full px-4 py-3 border-2 border-border rounded-xl focus:border-accent-primary focus:outline-none transition-colors"
-            />
+      <Dialog open={showGamifyDialog} onOpenChange={setShowGamifyDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogTitle className="text-center">
+            <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-yellow-100">
+              <Trophy className="h-7 w-7 text-yellow-600" />
+            </div>
+            ¿Sumar puntos?
+          </DialogTitle>
+          <DialogDescription className="text-center text-base text-text-secondary">
+            Inicia sesión para participar en el ranking del curso y ganar puntos por cada foto que subas.
+          </DialogDescription>
+          <div className="flex flex-col gap-2 mt-4">
+            <Button
+              onClick={handleGamifyAccept}
+              className="w-full gap-2"
+            >
+              <LogIn className="h-4 w-4" />
+              Iniciar sesión con Google
+            </Button>
+            <Button
+              onClick={handleGamifyDecline}
+              variant="ghost"
+              className="w-full text-text-muted"
+            >
+              Continuar sin cuenta
+            </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {files.length > 0 && (
-        <>
-          <Button
-            onClick={handleUpload}
-            disabled={isUploading || files.length === 0 || !selectedSubject}
-            className="w-full h-12 text-base"
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="h-5 w-5 animate-spin" />
-                Subiendo... {uploadProgress}%
-              </>
-            ) : (
-              <>
-                <Upload className="h-5 w-5" />
-                Subir {files.length} imagen(es)
-              </>
-            )}
-          </Button>
-        </>
-      )}
-    </div>
+        </DialogContent>
+      </Dialog>
+    </>
   )
 }

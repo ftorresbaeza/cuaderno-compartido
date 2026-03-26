@@ -1,5 +1,6 @@
 import { getSubjects } from "@/actions/subject"
 import { getCourseByCode } from "@/actions/course"
+import { auth } from "@/auth"
 import { UploadDropzone } from "@/components/image/UploadDropzone"
 import { Camera } from "lucide-react"
 
@@ -12,13 +13,17 @@ export default async function UploadPage({
 }) {
   const { courseCode } = await params
   const { date, subjectId } = await searchParams
-  const course = await getCourseByCode(courseCode)
+  const [course, session] = await Promise.all([
+    getCourseByCode(courseCode),
+    auth(),
+  ])
 
   if (!course) {
     return <div>Curso no encontrado</div>
   }
 
   const subjects = await getSubjects(course.id)
+  const isLoggedIn = !!session?.user?.id
 
   return (
     <div className="space-y-6">
@@ -36,9 +41,11 @@ export default async function UploadPage({
 
       <UploadDropzone
         courseCode={courseCode}
+        courseId={course.id}
         subjects={subjects.map((s) => ({ id: s.id, name: s.name }))}
         initialDate={date}
         initialSubjectId={subjectId}
+        isLoggedIn={isLoggedIn}
       />
     </div>
   )

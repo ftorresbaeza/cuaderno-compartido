@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { X, ZoomIn, ZoomOut, Calendar as CalendarIcon, ChevronRight, ChevronDown, ChevronLeft, Trash2 } from "lucide-react"
+import { X, ZoomIn, ZoomOut, Calendar as CalendarIcon, ChevronRight, ChevronDown, ChevronLeft, Trash2, Heart, RotateCw } from "lucide-react"
 import { format, isToday, isYesterday } from "date-fns"
 import { es } from "date-fns/locale"
+import { sendThanks, rotateImage } from "@/actions/image"
 import {
   Dialog,
   DialogContent,
@@ -17,6 +18,8 @@ interface ImageNote {
   url: string
   date: string | Date
   createdAt: string | Date
+  rotation?: number
+  uploaderId?: string | null
   subject?: {
     name: string
   }
@@ -25,10 +28,11 @@ interface ImageNote {
 interface ImageGridProps {
   images: ImageNote[]
   isLoading?: boolean
+  currentUserId?: string
   onDelete?: (imageId: string) => Promise<{ success?: boolean; error?: string }>
 }
 
-export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
+export function ImageGrid({ images, isLoading, currentUserId, onDelete }: ImageGridProps) {
   const [activeDateKey, setActiveDateKey] = useState<string | null>(null)
   const [activeIndex, setActiveIndex] = useState<number>(0)
   const [deleting, setDeleting] = useState(false)
@@ -36,8 +40,12 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
   const [zoom, setZoom] = useState(1)
   const [pan, setPan] = useState({ x: 0, y: 0 })
   const [isPanning, setIsPanning] = useState(false)
+  const [thanking, setThanking] = useState(false)
+  const [thanked, setThanked] = useState<Record<string, boolean>>({})
+  const [rotating, setRotating] = useState(false)
+  const [localRotation, setLocalRotation] = useState<Record<string, number>>({})
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
-  const touchStartX = useRef<number | null>(null)
+  const touchStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null)
   const pinchStartDist = useRef<number | null>(null)
   const pinchStartZoom = useRef(1)
   const containerRef = useRef<HTMLDivElement>(null)
@@ -55,6 +63,11 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
   const activeGroup = activeDateKey ? groupedImages[activeDateKey] : null
   const selectedImage = activeGroup ? activeGroup[activeIndex] : null
   const isOpen = activeDateKey !== null
+
+  const getRotation = (imageId: string) => {
+    const img = images.find(i => i.id === imageId)
+    return localRotation[imageId] ?? img?.rotation ?? 0
+  }
 
   const openDay = useCallback((dateKey: string, imageIndex: number) => {
     setActiveDateKey(dateKey)
@@ -101,6 +114,17 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
     setPan({ x: 0, y: 0 })
   }, [])
 
+  const handleRotate = useCallback(async () => {
+    if (!selectedImage || rotating) return
+    setRotating(true)
+    setLocalRotation((prev) => ({
+      ...prev,
+      [selectedImage.id]: ((prev[selectedImage.id] ?? selectedImage.rotation ?? 0) + 90) % 360,
+    }))
+    await rotateImage(selectedImage.id)
+    setRotating(false)
+  }, [selectedImage, rotating])
+
   // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return
@@ -116,27 +140,36 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
     return () => window.removeEventListener("keydown", handler)
   }, [isOpen, goNext, goPrev, close, zoomIn, zoomOut, resetZoom])
 
-  // Touch: swipe for navigation and pinch for zoom
+  // Distance between two touch points
   const getTouchDist = (touches: React.TouchList) => {
     const dx = touches[0].clientX - touches[1].clientX
     const dy = touches[0].clientY - touches[1].clientY
     return Math.sqrt(dx * dx + dy * dy)
   }
 
+  // Touch handlers for mobile pan + pinch zoom + swipe navigation
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
+      // Pinch start
       pinchStartDist.current = getTouchDist(e.touches)
       pinchStartZoom.current = zoom
-      touchStartX.current = null
+      touchStart.current = null
       return
     }
     if (e.touches.length === 1) {
-      touchStartX.current = e.touches[0].clientX
+      if (zoom > 1) {
+        // Pan mode when zoomed
+        touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, panX: pan.x, panY: pan.y }
+      } else {
+        // Swipe mode when not zoomed
+        touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY, panX: 0, panY: 0 }
+      }
       pinchStartDist.current = null
     }
   }
 
   const handleTouchMove = (e: React.TouchEvent) => {
+    // Pinch zoom
     if (e.touches.length === 2 && pinchStartDist.current !== null) {
       e.preventDefault()
       const dist = getTouchDist(e.touches)
@@ -144,25 +177,38 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
       const newZoom = Math.min(Math.max(pinchStartZoom.current * scale, 1), 4)
       setZoom(newZoom)
       if (newZoom <= 1) setPan({ x: 0, y: 0 })
+      return
+    }
+    // Single finger pan when zoomed
+    if (e.touches.length === 1 && touchStart.current && zoom > 1) {
+      e.preventDefault()
+      const dx = e.touches[0].clientX - touchStart.current.x
+      const dy = e.touches[0].clientY - touchStart.current.y
+      setPan({
+        x: touchStart.current.panX + dx,
+        y: touchStart.current.panY + dy,
+      })
     }
   }
 
   const handleTouchEnd = (e: React.TouchEvent) => {
+    // Pinch ended
     if (pinchStartDist.current !== null && e.touches.length < 2) {
       pinchStartDist.current = null
       if (zoom <= 1) setZoom(1)
       return
     }
-    if (touchStartX.current !== null && zoom <= 1) {
-      const diff = touchStartX.current - e.changedTouches[0].clientX
+    // Single finger: swipe to navigate only when not zoomed
+    if (touchStart.current && zoom <= 1) {
+      const diff = touchStart.current.x - e.changedTouches[0].clientX
       if (Math.abs(diff) > 50) {
         diff > 0 ? goNext() : goPrev()
       }
-      touchStartX.current = null
     }
+    touchStart.current = null
   }
 
-  // Mouse: drag to pan when zoomed
+  // Mouse drag for pan on desktop
   const handleMouseDown = (e: React.MouseEvent) => {
     if (zoom <= 1) return
     setIsPanning(true)
@@ -273,6 +319,7 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
                           fill
                           className="object-cover transition-transform group-hover:scale-105"
                           sizes="(max-width: 640px) 33vw, 200px"
+                          style={{ transform: `rotate(${getRotation(image.id)}deg)` }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
                         <ZoomIn className="absolute bottom-2 right-2 h-4 w-4 text-white opacity-40" />
@@ -308,9 +355,10 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
               style={{ cursor: zoom > 1 ? (isPanning ? "grabbing" : "grab") : "default" }}
             >
               <div
-                className="w-full h-full transition-transform duration-200"
+                className="w-full h-full"
                 style={{
-                  transform: `scale(${zoom}) translate(${pan.x / zoom}px, ${pan.y / zoom}px)`,
+                  transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+                  transition: isPanning || pinchStartDist.current ? "none" : "transform 0.2s ease-out",
                 }}
               >
                 <Image
@@ -320,6 +368,7 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
                   className="object-contain pointer-events-none"
                   quality={100}
                   sizes="100vw"
+                  style={{ transform: `rotate(${getRotation(selectedImage.id)}deg)` }}
                 />
               </div>
 
@@ -339,7 +388,7 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
               )}
 
               {/* Flecha izquierda */}
-              {activeGroup.length > 1 && (
+              {activeGroup.length > 1 && zoom <= 1 && (
                 <button
                   onClick={goPrev}
                   className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/25 transition-colors z-10"
@@ -349,7 +398,7 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
               )}
 
               {/* Flecha derecha */}
-              {activeGroup.length > 1 && (
+              {activeGroup.length > 1 && zoom <= 1 && (
                 <button
                   onClick={goNext}
                   className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 hover:bg-white/25 transition-colors z-10"
@@ -358,7 +407,7 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
                 </button>
               )}
 
-              {/* Controles de zoom */}
+              {/* Controles: zoom + rotar */}
               <div className="absolute bottom-4 left-4 flex items-center gap-2 z-10">
                 <button
                   onClick={zoomOut}
@@ -374,6 +423,13 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
                 >
                   <ZoomIn className="h-5 w-5 text-white" />
                 </button>
+                <button
+                  onClick={handleRotate}
+                  disabled={rotating}
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-30"
+                >
+                  <RotateCw className={cn("h-5 w-5 text-white", rotating && "animate-spin")} />
+                </button>
                 {zoom > 1 && (
                   <span className="text-white/70 text-xs font-medium px-2 py-1 rounded-full bg-black/40">
                     {Math.round(zoom * 100)}%
@@ -381,15 +437,20 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
                 )}
               </div>
 
-              {/* Eliminar */}
-              {onDelete && (
+              {/* Eliminar - admins o dueño de la imagen */}
+              {(onDelete || (currentUserId && selectedImage.uploaderId === currentUserId)) && (
                 <button
                   disabled={deleting}
                   onClick={async () => {
                     if (!confirm("¿Eliminar esta imagen?")) return
                     setDeleting(true)
                     const deletedId = selectedImage.id
-                    await onDelete(deletedId)
+                    if (onDelete) {
+                      await onDelete(deletedId)
+                    } else {
+                      const { deleteOwnImage } = await import("@/actions/image")
+                      await deleteOwnImage(deletedId)
+                    }
                     const remaining = activeGroup.filter((img) => img.id !== deletedId)
                     if (remaining.length === 0) {
                       close()
@@ -404,6 +465,28 @@ export function ImageGrid({ images, isLoading, onDelete }: ImageGridProps) {
                   {deleting ? "Eliminando…" : "Eliminar"}
                 </button>
               )}
+
+              {/* Gracias */}
+              <button
+                disabled={thanking || thanked[selectedImage.id]}
+                onClick={async () => {
+                  setThanking(true)
+                  const result = await sendThanks(selectedImage.id)
+                  if (result.success) {
+                    setThanked((prev) => ({ ...prev, [selectedImage.id]: true }))
+                  }
+                  setThanking(false)
+                }}
+                className={cn(
+                  "absolute bottom-4 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-medium transition-all z-10",
+                  thanked[selectedImage.id]
+                    ? "bg-pink-600/60"
+                    : "bg-pink-600/80 hover:bg-pink-600 active:scale-95"
+                )}
+              >
+                <Heart className={cn("h-4 w-4", thanked[selectedImage.id] && "fill-current")} />
+                {thanking ? "Enviando…" : thanked[selectedImage.id] ? "Enviado" : "¡Gracias!"}
+              </button>
             </div>
           )}
         </DialogContent>

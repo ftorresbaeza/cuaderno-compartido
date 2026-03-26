@@ -20,6 +20,7 @@ model User {
   memberships   CourseMember[]
   uploadedNotes ImageNote[]
   activities    UserActivity[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Account {
@@ -104,6 +105,7 @@ model ImageNote {
   date       DateTime @db.Date
   uploader   User?    @relation(fields: [uploaderId], references: [id], onDelete: SetNull)
   uploaderId String?
+  rotation   Int      @default(0)
   createdAt  DateTime @default(now())
   
   @@index([subjectId, date])
@@ -137,10 +139,13 @@ model PushSubscription {
   auth      String
   courseId  String
   course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
   createdAt DateTime @default(now())
 
   @@unique([endpoint, courseId])
   @@index([courseId])
+  @@index([userId])
 }
 
 model UserActivity {

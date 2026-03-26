@@ -52,6 +52,14 @@ export async function getSubjectWithImages(subjectId: string, page = 1, pageSize
       orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       skip,
       take: pageSize,
+      select: {
+        id: true,
+        url: true,
+        date: true,
+        createdAt: true,
+        rotation: true,
+        uploaderId: true,
+      },
     }),
     prisma.imageNote.count({ where: { subjectId } }),
   ])

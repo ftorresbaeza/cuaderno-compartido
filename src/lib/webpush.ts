@@ -1,30 +1,25 @@
 import webpush from "web-push"
 import { prisma } from "@/lib/prisma"
 
-export async function sendPushToCourse(
-  courseId: string,
-  payload: { title: string; body: string; url?: string }
-) {
-  const subscriptions = await prisma.pushSubscription.findMany({
-    where: { courseId },
-  })
-
-  console.log(`[webpush] courseId=${courseId} subscriptions=${subscriptions.length} privateKey=${process.env.VAPID_PRIVATE_KEY ? "ok" : "MISSING"}`)
-
-  if (subscriptions.length === 0) return []
-
+function getWebPushConfig() {
   const publicKey = "BNpU_ZnAQrxw6DU0gfQlLLxBhpk6MI2hbF_ZhPts272LhLt4azNtepjBoLgBY1DWw2-j3f-RycTVfe3A7jWTHwA"
   const rawPrivateKey = process.env.VAPID_PRIVATE_KEY ?? ""
-  // Trim whitespace (newlines added by some shells), normalize to URL-safe base64 without padding
   const privateKey = rawPrivateKey.trim().replace(/\+/g, "-").replace(/\//g, "_").replace(/=/g, "")
-
-  console.log(`[webpush] privateKey length=${privateKey.length} (raw=${rawPrivateKey.length})`)
 
   webpush.setVapidDetails(
     `mailto:${process.env.VAPID_EMAIL ?? "ftorresbaeza@gmail.com"}`,
     publicKey,
     privateKey
   )
+}
+
+async function sendToSubscriptions(
+  subscriptions: { endpoint: string; p256dh: string; auth: string }[],
+  payload: { title: string; body: string; url?: string }
+): Promise<{ results: PromiseSettledResult<webpush.SendResult>[]; expiredEndpoints: string[] }> {
+  if (subscriptions.length === 0) return { results: [], expiredEndpoints: [] }
+
+  getWebPushConfig()
 
   const results = await Promise.allSettled(
     subscriptions.map((sub) =>
@@ -48,9 +43,50 @@ export async function sendPushToCourse(
     }
   })
 
+  return { results, expiredEndpoints }
+}
+
+export async function sendPushToCourse(
+  courseId: string,
+  payload: { title: string; body: string; url?: string }
+) {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { courseId },
+  })
+
+  console.log(`[webpush] courseId=${courseId} subscriptions=${subscriptions.length} privateKey=${process.env.VAPID_PRIVATE_KEY ? "ok" : "MISSING"}`)
+
+  const { results, expiredEndpoints } = await sendToSubscriptions(subscriptions, payload)
+
   if (expiredEndpoints.length > 0) {
     await prisma.pushSubscription.deleteMany({
       where: { endpoint: { in: expiredEndpoints }, courseId },
+    })
+  }
+
+  return results.map((r, i) => ({
+    endpoint: subscriptions[i].endpoint.slice(0, 60),
+    status: r.status,
+    error: r.status === "rejected" ? String((r.reason as Error)?.message) : undefined,
+  }))
+}
+
+export async function sendPushToUser(
+  userId: string,
+  courseId: string,
+  payload: { title: string; body: string; url?: string }
+) {
+  const subscriptions = await prisma.pushSubscription.findMany({
+    where: { userId, courseId },
+  })
+
+  console.log(`[webpush] userId=${userId} courseId=${courseId} subscriptions=${subscriptions.length}`)
+
+  const { results, expiredEndpoints } = await sendToSubscriptions(subscriptions, payload)
+
+  if (expiredEndpoints.length > 0) {
+    await prisma.pushSubscription.deleteMany({
+      where: { endpoint: { in: expiredEndpoints } },
     })
   }
 

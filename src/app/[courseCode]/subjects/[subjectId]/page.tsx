@@ -60,6 +60,7 @@ export default async function SubjectPage({
         </h2>
         <ImageGrid
           images={images}
+          currentUserId={session?.user?.id}
           onDelete={canDelete ? deleteImageAdmin : undefined}
         />
       </div>
