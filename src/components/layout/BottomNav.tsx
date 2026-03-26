@@ -49,6 +49,9 @@ export function FAB() {
   const pathname = usePathname()
   const basePath = pathname.replace(/(\/subjects|\/calendar|\/upload|\/members|\/settings|\/ranking).*$/, "")
 
+  // Ocultar FAB en la página de upload
+  if (pathname.includes("/upload")) return null
+
   // Detectar si estamos en una página de materia: /{courseCode}/subjects/{subjectId}
   const subjectMatch = pathname.match(/\/subjects\/([^/]+)$/)
   const subjectId = subjectMatch?.[1]
