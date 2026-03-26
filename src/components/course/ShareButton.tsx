@@ -6,10 +6,11 @@ import { Share2, Check, Copy } from "lucide-react"
 interface ShareButtonProps {
   courseCode: string
   courseName: string
+  courseId?: string
   className?: string
 }
 
-export function ShareButton({ courseCode, courseName, className = "" }: ShareButtonProps) {
+export function ShareButton({ courseCode, courseName, courseId, className = "" }: ShareButtonProps) {
   const [copied, setCopied] = useState(false)
 
   const handleShare = async () => {
@@ -24,6 +25,14 @@ export function ShareButton({ courseCode, courseName, className = "" }: ShareBut
       await navigator.clipboard.writeText(`${text}\n${url}`)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
+    }
+
+    if (courseId) {
+      fetch("/api/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId, type: "SHARE_LINK" }),
+      }).catch(() => {})
     }
   }
 

@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { sendPushToCourse } from "@/lib/webpush"
+import { auth } from "@/auth"
 
 export type EventType = "TASK" | "TEST" | "ACTIVITY"
 
@@ -47,6 +48,13 @@ export async function createEvent(input: CreateEventInput) {
       body: `${event.title}${event.subject ? ` — ${event.subject.name}` : ""} · ${dateLabel}`,
       url: `/${event.course?.code ?? input.courseId}/calendar`,
     }).catch(() => {/* no bloquear si falla el push */})
+
+    const session = await auth()
+    if (session?.user?.id) {
+      await prisma.userActivity.create({
+        data: { userId: session.user.id, courseId: input.courseId, type: "CREATE_EVENT" },
+      })
+    }
 
     revalidatePath("/")
     return { success: true, event }

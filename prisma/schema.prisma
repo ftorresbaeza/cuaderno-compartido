@@ -19,6 +19,7 @@ model User {
   accounts      Account[]
   memberships   CourseMember[]
   uploadedNotes ImageNote[]
+  activities    UserActivity[]
 }
 
 model Account {
@@ -58,6 +59,7 @@ model Course {
   events             Event[]
   members            CourseMember[]
   pushSubscriptions  PushSubscription[]
+  activities         UserActivity[]
 }
 
 model CourseMember {
@@ -139,4 +141,25 @@ model PushSubscription {
 
   @@unique([endpoint, courseId])
   @@index([courseId])
+}
+
+model UserActivity {
+  id        String       @id @default(cuid())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course       @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  type      ActivityType
+  createdAt DateTime     @default(now())
+
+  @@index([userId, courseId])
+  @@index([courseId])
+}
+
+enum ActivityType {
+  UPLOAD_IMAGE
+  CREATE_SUBJECT
+  CREATE_EVENT
+  REQUEST_IMAGES
+  SHARE_LINK
 }

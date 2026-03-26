@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
+import { auth } from "@/auth"
 
 export async function createSubject(courseId: string, name: string) {
   if (!name || name.trim().length === 0) {
@@ -9,12 +10,16 @@ export async function createSubject(courseId: string, name: string) {
   }
 
   try {
-    const subject = await prisma.subject.create({
-      data: {
-        name: name.trim(),
-        courseId,
-      },
-    })
+    const [subject, session] = await Promise.all([
+      prisma.subject.create({ data: { name: name.trim(), courseId } }),
+      auth(),
+    ])
+
+    if (session?.user?.id) {
+      await prisma.userActivity.create({
+        data: { userId: session.user.id, courseId, type: "CREATE_SUBJECT" },
+      })
+    }
 
     revalidatePath(`/[courseCode]`, "layout")
     return { success: true, subject }

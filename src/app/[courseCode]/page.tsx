@@ -97,6 +97,7 @@ export default async function CoursePage({
           <ShareButton
             courseCode={courseCode}
             courseName={course.name}
+            courseId={course.id}
             className="p-2 text-text-muted hover:text-accent-primary hover:bg-blue-50"
           />
           {canManage && (
@@ -181,7 +182,7 @@ export default async function CoursePage({
             subjects={course.subjects.map(s => ({ id: s.id, name: s.name }))}
           />
         </div>
-        <SubjectList subjects={course.subjects} courseCode={courseCode} />
+        <SubjectList subjects={course.subjects} courseCode={courseCode} courseId={course.id} />
       </div>
 
       {course.events.filter((e) => new Date(e.date) >= selectedDate).length > 0 && (

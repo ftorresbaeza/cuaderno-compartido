@@ -1,0 +1,7 @@
+export const POINTS: Record<string, number> = {
+  UPLOAD_IMAGE: 10,
+  CREATE_SUBJECT: 15,
+  CREATE_EVENT: 8,
+  REQUEST_IMAGES: 5,
+  SHARE_LINK: 3,
+}

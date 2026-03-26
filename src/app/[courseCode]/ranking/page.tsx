@@ -1,7 +1,8 @@
 import { getCourseLeaderboard } from "@/actions/score"
+import { POINTS } from "@/lib/score-config"
 import { auth, signIn } from "@/auth"
 import { Card, CardContent } from "@/components/ui/card"
-import { ArrowLeft, Trophy, Upload, LogIn, User } from "lucide-react"
+import { ArrowLeft, Trophy, Upload, LogIn, User, BookOpen, Calendar, HandHelping, Share2 } from "lucide-react"
 import Link from "next/link"
 import { redirect } from "next/navigation"
 
@@ -122,16 +123,35 @@ export default async function RankingPage({
                       <span className="ml-2 text-xs text-accent-primary font-bold">• Tú</span>
                     )}
                   </p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span
-                      className={`text-xs font-medium px-2 py-0.5 rounded-full border ${roleInfo.color}`}
-                    >
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full border ${roleInfo.color}`}>
                       {roleInfo.label}
                     </span>
-                    <span className="text-xs text-text-muted flex items-center gap-1">
-                      <Upload className="h-3 w-3" />
-                      {entry.uploads} subidas
-                    </span>
+                    {entry.breakdown.UPLOAD_IMAGE > 0 && (
+                      <span className="text-xs text-text-muted flex items-center gap-0.5">
+                        <Upload className="h-3 w-3" />{entry.breakdown.UPLOAD_IMAGE}
+                      </span>
+                    )}
+                    {entry.breakdown.CREATE_SUBJECT > 0 && (
+                      <span className="text-xs text-text-muted flex items-center gap-0.5">
+                        <BookOpen className="h-3 w-3" />{entry.breakdown.CREATE_SUBJECT}
+                      </span>
+                    )}
+                    {entry.breakdown.CREATE_EVENT > 0 && (
+                      <span className="text-xs text-text-muted flex items-center gap-0.5">
+                        <Calendar className="h-3 w-3" />{entry.breakdown.CREATE_EVENT}
+                      </span>
+                    )}
+                    {entry.breakdown.REQUEST_IMAGES > 0 && (
+                      <span className="text-xs text-text-muted flex items-center gap-0.5">
+                        <HandHelping className="h-3 w-3" />{entry.breakdown.REQUEST_IMAGES}
+                      </span>
+                    )}
+                    {entry.breakdown.SHARE_LINK > 0 && (
+                      <span className="text-xs text-text-muted flex items-center gap-0.5">
+                        <Share2 className="h-3 w-3" />{entry.breakdown.SHARE_LINK}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -150,8 +170,10 @@ export default async function RankingPage({
         <p className="text-xs font-semibold text-text-secondary">¿Cómo se calculan los puntos?</p>
         <ul className="text-xs text-text-muted space-y-1">
           <li>📸 Subir una imagen de apuntes → <strong>+10 pts</strong></li>
-          <li>👑 Ser propietario del curso → <strong>+50 pts</strong></li>
-          <li>🛡️ Ser administrador → <strong>+20 pts</strong></li>
+          <li>📚 Crear una asignatura → <strong>+15 pts</strong></li>
+          <li>📅 Crear un evento (tarea/prueba/actividad) → <strong>+8 pts</strong></li>
+          <li>🙋 Pedir fotos a compañeros → <strong>+5 pts</strong></li>
+          <li>🔗 Compartir el link del curso → <strong>+3 pts</strong></li>
         </ul>
       </div>
     </div>

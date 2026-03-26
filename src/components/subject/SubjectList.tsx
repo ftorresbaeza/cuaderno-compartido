@@ -16,15 +16,18 @@ interface Subject {
 interface SubjectListProps {
   subjects: Subject[]
   courseCode: string
+  courseId?: string
 }
 
 function RequestSheet({
   subject,
   courseCode,
+  courseId,
   onClose,
 }: {
   subject: Subject
   courseCode: string
+  courseId?: string
   onClose: () => void
 }) {
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split("T")[0])
@@ -41,6 +44,15 @@ function RequestSheet({
     } else {
       await navigator.clipboard.writeText(`${text}\n${link}`)
     }
+
+    if (courseId) {
+      fetch("/api/activity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseId, type: "REQUEST_IMAGES" }),
+      }).catch(() => {})
+    }
+
     setShared(true)
     setTimeout(() => { setShared(false); onClose() }, 1800)
   }
@@ -105,7 +117,7 @@ function RequestSheet({
   )
 }
 
-export function SubjectList({ subjects, courseCode }: SubjectListProps) {
+export function SubjectList({ subjects, courseCode, courseId }: SubjectListProps) {
   const [requestingSubject, setRequestingSubject] = useState<Subject | null>(null)
 
   if (subjects.length === 0) {
@@ -162,6 +174,7 @@ export function SubjectList({ subjects, courseCode }: SubjectListProps) {
         <RequestSheet
           subject={requestingSubject}
           courseCode={courseCode}
+          courseId={courseId}
           onClose={() => setRequestingSubject(null)}
         />
       )}
