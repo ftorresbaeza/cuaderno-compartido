@@ -13,14 +13,16 @@ export function ThemeToggle() {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
     const initialTheme = stored || (prefersDark ? "dark" : "light")
     setTheme(initialTheme)
-    document.documentElement.setAttribute("data-theme", initialTheme)
+    document.documentElement.classList.remove("light", "dark")
+    document.documentElement.classList.add(initialTheme)
   }, [])
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light"
     setTheme(newTheme)
     localStorage.setItem("theme", newTheme)
-    document.documentElement.setAttribute("data-theme", newTheme)
+    document.documentElement.classList.remove("light", "dark")
+    document.documentElement.classList.add(newTheme)
   }
 
   if (!mounted) return null
@@ -32,9 +34,9 @@ export function ThemeToggle() {
       title={theme === "light" ? "Modo oscuro" : "Modo claro"}
     >
       {theme === "light" ? (
-        <Moon className="h-5 w-5 text-text-secondary" />
+        <Sun className="h-5 w-5 text-yellow-500" />
       ) : (
-        <Sun className="h-5 w-5 text-yellow-400" />
+        <Moon className="h-5 w-5 text-text-secondary" />
       )}
     </button>
   )

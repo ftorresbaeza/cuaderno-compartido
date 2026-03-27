@@ -17,7 +17,7 @@
   --border: #E8E4DD;
 }
 
-[data-theme="dark"] {
+.dark {
   --bg-primary: #1a1a1a;
   --bg-secondary: #2d2d2d;
   --bg-card: #333333;
