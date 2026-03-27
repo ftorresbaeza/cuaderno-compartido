@@ -220,12 +220,6 @@ export function CalendarClient({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <input
-            type="date"
-            value={quickDate}
-            onChange={(e) => handleQuickDateChange(e.target.value)}
-            className="px-3 py-2 border-2 border-border rounded-xl text-sm bg-bg-card"
-          />
           <Button
             size="sm"
             onClick={() => setShowEventDialog(true)}
