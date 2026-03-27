@@ -3,6 +3,7 @@ import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import { Toaster } from "@/components/ui/toaster";
 import { UpdateBanner } from "@/components/layout/UpdateBanner";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -22,13 +23,18 @@ export const metadata: Metadata = {
   description: "Plataforma colaborativa para compartir apuntes escolares",
   manifest: "/manifest.webmanifest",
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
     apple: "/icon-192.png",
+    shortcut: "/favicon.png",
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: "default",
+    statusBarStyle: "black-translucent",
     title: "Cuaderno",
+    startupImage: "/icon-512.png",
   },
 };
 
@@ -51,6 +57,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-bg-primary text-text-primary font-sans antialiased">
         <UpdateBanner />
         {children}
+        <InstallPrompt />
         <Toaster />
         <Script
           id="pwa-sw"
