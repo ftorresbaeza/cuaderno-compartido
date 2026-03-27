@@ -97,14 +97,18 @@ export function EventDetailDialog({
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+            <div className="space-y-4">
             <div className="flex items-center gap-2 text-sm text-text-secondary">
               <span className="px-2 py-1 bg-bg-secondary rounded-lg">
                 {eventLabels[event.type]}
               </span>
               <span>•</span>
               <span className="capitalize">
-                {format(new Date(event.date), "d 'de' MMMM 'de' yyyy", { locale: es })}
+                {(() => {
+                  const d = new Date(event.date)
+                  const localDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000)
+                  return format(localDate, "d 'de' MMMM 'de' yyyy", { locale: es })
+                })()}
               </span>
             </div>
 
@@ -147,7 +151,11 @@ export function EventDetailDialog({
             title: event.title,
             description: event.description || undefined,
             type: event.type,
-            date: new Date(event.date).toISOString().split("T")[0],
+            date: (() => {
+              const d = new Date(event.date)
+              const localDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000)
+              return localDate.toISOString().split("T")[0]
+            })(),
             subjectId: event.subject?.id,
           }}
         />

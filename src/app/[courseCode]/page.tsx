@@ -187,21 +187,27 @@ export default async function CoursePage({
         <SubjectList subjects={course.subjects} courseCode={courseCode} courseId={course.id} />
       </div>
 
-      {course.events.filter((e) => new Date(e.date) >= selectedDate).length > 0 && (
+      {(() => {
+        const upcomingEvents = course.events.filter((e) => {
+          const eventDate = new Date(e.date)
+          const localDate = new Date(eventDate.getTime() + eventDate.getTimezoneOffset() * 60000)
+          return localDate >= selectedDate
+        })
+        return upcomingEvents.length > 0 && (
         <div>
           <h2 className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">
             <Calendar className="h-4 w-4" />
             {dateParam ? "Eventos para este día" : "Próximos eventos"}
           </h2>
           <EventList 
-            events={course.events.filter((e) => new Date(e.date) >= selectedDate).slice(0, 3)} 
+            events={upcomingEvents.slice(0, 3)} 
             canEdit={canManage}
             subjects={course.subjects}
             courseId={course.id}
             courseCode={courseCode}
           />
         </div>
-      )}
+      )})()}
     </div>
   )
 }
