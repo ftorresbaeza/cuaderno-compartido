@@ -13,12 +13,22 @@ interface Event {
   type: "TASK" | "TEST" | "ACTIVITY"
   date: string | Date
   subject?: {
+    id: string
     name: string
   } | null
 }
 
+interface Subject {
+  id: string
+  name: string
+}
+
 interface EventListProps {
   events: Event[]
+  canEdit?: boolean
+  subjects?: Subject[]
+  courseId?: string
+  courseCode?: string
 }
 
 const eventIcons = {
@@ -33,7 +43,7 @@ const eventColors = {
   ACTIVITY: "text-blue-600 bg-blue-50",
 }
 
-export function EventList({ events }: EventListProps) {
+export function EventList({ events, canEdit, subjects = [], courseId, courseCode }: EventListProps) {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
 
   return (
@@ -67,6 +77,10 @@ export function EventList({ events }: EventListProps) {
         open={!!selectedEvent}
         onOpenChange={(open) => !open && setSelectedEvent(null)}
         event={selectedEvent}
+        canEdit={canEdit}
+        subjects={subjects}
+        courseId={courseId}
+        courseCode={courseCode}
       />
     </>
   )

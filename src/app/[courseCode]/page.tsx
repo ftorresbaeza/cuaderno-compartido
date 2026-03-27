@@ -192,7 +192,13 @@ export default async function CoursePage({
             <Calendar className="h-4 w-4" />
             {dateParam ? "Eventos para este día" : "Próximos eventos"}
           </h2>
-          <EventList events={course.events.filter((e) => new Date(e.date) >= selectedDate).slice(0, 3)} />
+          <EventList 
+            events={course.events.filter((e) => new Date(e.date) >= selectedDate).slice(0, 3)} 
+            canEdit={canManage}
+            subjects={course.subjects}
+            courseId={course.id}
+            courseCode={courseCode}
+          />
         </div>
       )}
     </div>
