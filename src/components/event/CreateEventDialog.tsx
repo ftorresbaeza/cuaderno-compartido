@@ -60,11 +60,19 @@ export function CreateEventDialog({
 
   useEffect(() => {
     if (open) {
-      setTitle(editEvent?.title || "")
-      setDescription(editEvent?.description || "")
-      setType(editEvent?.type || "TASK")
-      setDate(editEvent?.date || defaultDate || new Date().toISOString().split("T")[0])
-      setSubjectId(editEvent?.subjectId || "")
+      if (editEvent) {
+        setTitle(editEvent.title)
+        setDescription(editEvent.description || "")
+        setType(editEvent.type)
+        setDate(editEvent.date)
+        setSubjectId(editEvent.subjectId || "")
+      } else {
+        setTitle("")
+        setDescription("")
+        setType("TASK")
+        setDate(defaultDate || new Date().toISOString().split("T")[0])
+        setSubjectId("")
+      }
     }
   }, [open, editEvent, defaultDate])
 
