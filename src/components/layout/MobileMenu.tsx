@@ -36,11 +36,11 @@ export function MobileMenu({ courseCode, courseName }: MobileMenuProps) {
       {open && (
         <div className="fixed inset-0 z-50">
           <div 
-            className="absolute inset-0 bg-black/50"
+            className="absolute inset-0 bg-black/60"
             onClick={() => setOpen(false)}
           />
-          <div className="absolute right-0 top-0 bottom-0 w-72 bg-bg-primary border-l border-border shadow-xl">
-            <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="absolute right-0 top-0 bottom-0 w-72 bg-bg-card border-l border-border shadow-2xl">
+            <div className="p-4 border-b border-border flex items-center justify-between bg-bg-card">
               <span className="font-semibold text-text-primary">{courseName || "Menú"}</span>
               <button
                 onClick={() => setOpen(false)}
@@ -50,7 +50,7 @@ export function MobileMenu({ courseCode, courseName }: MobileMenuProps) {
               </button>
             </div>
             
-            <nav className="p-4 space-y-2">
+            <nav className="p-4 space-y-2 bg-bg-card">
               {menuItems.map(item => {
                 const Icon = item.icon
                 const isActive = pathname === item.href

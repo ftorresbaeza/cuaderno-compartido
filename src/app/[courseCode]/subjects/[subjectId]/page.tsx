@@ -21,8 +21,6 @@ interface SubjectPageProps {
 type SubjectData = Awaited<ReturnType<typeof getSubjectWithImages>>
 
 export default function SubjectPage({ params, searchParams }: SubjectPageProps) {
-  const [selectedDateFilter, setSelectedDateFilter] = useState<string>("all")
-  const [customDate, setCustomDate] = useState<string>("")
   const [isLoading, setIsLoading] = useState(true)
   const [subjectData, setSubjectData] = useState<SubjectData | null>(null)
   const [thanksData, setThanksData] = useState<Record<string, { count: number; thankedByMe: boolean }> | undefined>(undefined)
@@ -70,29 +68,6 @@ export default function SubjectPage({ params, searchParams }: SubjectPageProps) 
   const membership = subject.course.members?.find((m: { userId: string; role: string }) => m.userId === session?.user?.id)
   const canDelete = isSuperAdmin || membership?.role === "OWNER" || membership?.role === "ADMIN"
 
-  const now = new Date()
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
-
-  const filteredImages = allImages.filter((img) => {
-    const imgDate = new Date(img.date)
-    
-    switch (selectedDateFilter) {
-      case "today":
-        return imgDate.toDateString() === today.toDateString()
-      case "week":
-        return imgDate >= weekAgo && imgDate <= now
-      case "month":
-        return imgDate >= monthStart && imgDate <= now
-      case "custom":
-        if (!customDate) return true
-        return imgDate.toDateString() === new Date(customDate).toDateString()
-      default:
-        return true
-    }
-  })
-
   return (
     <div className="space-y-6">
       <div className="flex items-start gap-4">
@@ -124,32 +99,13 @@ export default function SubjectPage({ params, searchParams }: SubjectPageProps) 
         </h2>
         
         <div className="flex items-center gap-2 mb-4">
-          <select 
-            value={selectedDateFilter}
-            onChange={(e) => setSelectedDateFilter(e.target.value)}
-            className="px-3 py-2 border-2 border-border rounded-xl text-sm bg-white"
-          >
-            <option value="all">Todas</option>
-            <option value="today">Hoy</option>
-            <option value="week">Esta semana</option>
-            <option value="month">Este mes</option>
-            <option value="custom">Fecha específica</option>
-          </select>
-          {selectedDateFilter === "custom" && (
-            <input
-              type="date"
-              value={customDate}
-              onChange={(e) => setCustomDate(e.target.value)}
-              className="px-3 py-2 border-2 border-border rounded-xl text-sm"
-            />
-          )}
-          <span className="text-sm text-text-muted ml-auto">
-            {filteredImages.length} imagenes
+          <span className="text-sm text-text-muted">
+            {allImages.length} imagenes
           </span>
         </div>
 
         <ImageGrid
-          images={filteredImages}
+          images={allImages}
           currentUserId={session?.user?.id}
           thanksData={thanksData}
           onDelete={canDelete ? deleteImageAdmin : undefined}
