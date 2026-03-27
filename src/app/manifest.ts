@@ -5,11 +5,14 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'Cuaderno Compartido',
     short_name: 'Cuaderno',
     description: 'Plataforma colaborativa para compartir apuntes escolares',
+    id: '/',
     start_url: '/',
     display: 'standalone',
+    prefer_related_applications: false,
     background_color: '#FDFBF7',
     theme_color: '#3B82F6',
     orientation: 'portrait-primary',
+    categories: ['education', 'productivity'],
     icons: [
       {
         src: '/icon-192.png',

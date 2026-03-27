@@ -20,7 +20,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Cuaderno Compartido",
   description: "Plataforma colaborativa para compartir apuntes escolares",
-  manifest: "/manifest.json",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: "/favicon.png",
     apple: "/icon-192.png",

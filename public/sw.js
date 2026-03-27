@@ -16,8 +16,8 @@ self.addEventListener('push', (event) => {
   const title = data.title ?? 'Cuaderno Compartido';
   const options = {
     body: data.body ?? '',
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: '/icon-192.png',
+    badge: '/icon-192.png',
     data: { url: data.url ?? '/' },
   };
   event.waitUntil(self.registration.showNotification(title, options));
