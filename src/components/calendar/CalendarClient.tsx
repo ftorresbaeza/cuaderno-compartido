@@ -21,6 +21,7 @@ interface CalendarEvent {
   type: "TASK" | "TEST" | "ACTIVITY"
   date: string
   subject?: {
+    id: string
     name: string
   }
   createdBy?: string | null
@@ -163,7 +164,7 @@ export function CalendarClient({
         description: evt.description,
         type: evt.type,
         subjectName: evt.subject?.name,
-        subjectId: undefined,
+        subjectId: evt.subject?.id,
         createdBy: evt.createdBy,
       }))
 

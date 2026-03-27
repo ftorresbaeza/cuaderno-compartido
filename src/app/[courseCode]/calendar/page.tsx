@@ -34,7 +34,7 @@ export default async function CalendarPage({
     title: e.title,
     type: e.type,
     date: e.date.toISOString(),
-    subject: e.subject ? { name: e.subject.name } : undefined,
+    subject: e.subject ? { id: e.subject.id, name: e.subject.name } : undefined,
     createdBy: e.createdBy,
   }))
 
