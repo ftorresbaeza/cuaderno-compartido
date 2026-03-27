@@ -59,7 +59,7 @@ export function InstallPrompt() {
       <div className="bg-slate-900 text-white rounded-3xl p-4 shadow-2xl shadow-black/40 border border-white/10 flex items-center gap-3">
         <div className="w-11 h-11 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center shrink-0">
           <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18.5l-3-3m3 3l3-3m-3 3V6m-6 9H4a2 2 0 01-2-2V4a2 2 0 012-2h16a2 2 0 012 2v9a2 2 0 01-2 2h-2" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
           </svg>
         </div>
 
@@ -68,7 +68,7 @@ export function InstallPrompt() {
           {isIOS ? (
             <p className="text-xs text-slate-400 mt-0.5">
               Toca <span className="inline-flex items-center gap-0.5">
-                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3 6h6l-5 4 2 6-6-4-6 4 2-6-5-4h6z" /></svg>
+                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 24 24"><path d="M9.5 4.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm6 0c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-6 7.5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm6 0c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z"/></svg>
                 Compartir
               </span> → <strong className="text-white">Añadir a inicio</strong>
             </p>
