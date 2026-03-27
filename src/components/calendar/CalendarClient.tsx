@@ -49,6 +49,7 @@ export function CalendarClient({
   initialEvents,
   initialImages,
   currentUserId,
+  initialDate,
 }: {
   courseId: string
   courseCode: string
@@ -56,9 +57,10 @@ export function CalendarClient({
   initialEvents: CalendarEvent[]
   initialImages: CalendarImage[]
   currentUserId?: string
+  initialDate?: Date
 }) {
-  const [currentMonth, setCurrentMonth] = useState(new Date())
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+  const [currentMonth, setCurrentMonth] = useState(initialDate || new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(initialDate || null)
   const [showEventDialog, setShowEventDialog] = useState(false)
   const [events, setEvents] = useState(initialEvents)
   const [images, setImages] = useState(initialImages)

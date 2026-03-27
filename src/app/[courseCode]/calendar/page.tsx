@@ -7,10 +7,13 @@ import { auth } from "@/auth"
 
 export default async function CalendarPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ courseCode: string }>
+  searchParams: Promise<{ date?: string }>
 }) {
   const { courseCode } = await params
+  const { date: dateParam } = await searchParams
   const [course, session] = await Promise.all([
     getCourseByCode(courseCode),
     auth(),
@@ -20,7 +23,7 @@ export default async function CalendarPage({
     return <div>Curso no encontrado</div>
   }
 
-  const now = new Date()
+  const now = dateParam ? new Date(dateParam) : new Date()
   const [events, images] = await Promise.all([
     getEventsByMonth(course.id, now.getFullYear(), now.getMonth() + 1),
     getImagesByMonth(course.id, now.getFullYear(), now.getMonth() + 1),
@@ -50,6 +53,7 @@ export default async function CalendarPage({
       initialEvents={formattedEvents}
       initialImages={formattedImages}
       currentUserId={session?.user?.id}
+      initialDate={dateParam ? new Date(dateParam) : undefined}
     />
   )
 }

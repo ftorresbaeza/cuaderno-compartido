@@ -198,8 +198,9 @@ export default async function CoursePage({
               .map((event) => {
                 const Icon = eventIcons[event.type]
                 return (
-                  <div
+                  <a
                     key={event.id}
+                    href={`/${courseCode}/calendar?date=${new Date(event.date).toISOString().split('T')[0]}`}
                     className="flex items-center gap-3 p-3 bg-bg-card rounded-xl border-2 border-border"
                   >
                     <div className={`p-2 rounded-lg ${eventColors[event.type]}`}>
@@ -213,7 +214,7 @@ export default async function CoursePage({
                         {format(new Date(event.date), "d 'de' MMM", { locale: es })}
                       </p>
                     </div>
-                  </div>
+                  </a>
                 )
               })}
           </div>
