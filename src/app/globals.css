@@ -35,10 +35,16 @@
 @layer base {
   * {
     @apply border-border;
+    box-sizing: border-box;
+  }
+  html {
+    overflow-x: hidden;
   }
   body {
     @apply bg-bg-primary text-text-primary;
     font-family: var(--font-sans), system-ui, sans-serif;
+    overscroll-behavior: none;
+    overflow-x: hidden;
   }
 }
 

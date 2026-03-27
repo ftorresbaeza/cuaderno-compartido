@@ -65,7 +65,7 @@ export function NotificationBell({ courseCode }: { courseCode: string }) {
       </button>
 
       {showDropdown && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-bg-card border-2 border-border rounded-2xl shadow-lg z-50 max-h-96 overflow-y-auto">
+        <div className="absolute right-0 top-full mt-2 w-72 sm:w-80 bg-bg-card border-2 border-border rounded-2xl shadow-lg z-50 max-h-96 overflow-y-auto">
           <div className="p-3 border-b border-border flex items-center justify-between">
             <span className="font-semibold text-text-primary">Notificaciones</span>
             {notifications.length > 0 && (

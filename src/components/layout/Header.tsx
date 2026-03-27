@@ -1,9 +1,8 @@
 import Link from "next/link"
-import { BookOpen, LogIn, LogOut, Shield } from "lucide-react"
+import { BookOpen, LogIn, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { auth, signIn, signOut } from "@/auth"
-import { ThemeToggle } from "./ThemeToggle"
-import { NotificationBell } from "@/components/notifications/NotificationBell"
+import { auth, signIn } from "@/auth"
+import { MobileMenu } from "./MobileMenu"
 
 const SUPER_ADMIN_EMAIL = "ftorresbaeza@gmail.com"
 
@@ -39,55 +38,16 @@ export async function Header({ courseName, courseCode }: HeaderProps) {
           )}
         </Link>
 
-        <div className="flex items-center gap-2">
-          <ThemeToggle />
-          {courseCode && <NotificationBell courseCode={courseCode} />}
+        <div className="flex items-center gap-1">
+          {courseCode && <MobileMenu courseCode={courseCode} courseName={courseName} />}
           {session?.user ? (
-            <div className="flex items-center gap-2">
-              {/* Link admin si es super admin */}
-              {session.user.email === SUPER_ADMIN_EMAIL && (
-                <Link
-                  href="/admin"
-                  className="p-2 hover:bg-purple-50 rounded-xl transition-colors"
-                  title="Panel de administración"
-                >
-                  <Shield className="h-4 w-4 text-purple-600" />
-                </Link>
-              )}
-              {/* Chip de usuario logueado */}
-              <div className="flex items-center gap-2 px-2.5 py-1.5 bg-green-50 border border-green-200 rounded-xl">
-                {session.user.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={session.user.image}
-                    alt=""
-                    className="h-6 w-6 rounded-full flex-shrink-0"
-                  />
-                ) : (
-                  <div className="h-6 w-6 rounded-full bg-green-200 flex items-center justify-center flex-shrink-0">
-                    <span className="text-[10px] font-bold text-green-700">
-                      {session.user.name?.[0] ?? "?"}
-                    </span>
-                  </div>
-                )}
-                <span className="text-xs font-semibold text-green-800 max-w-[72px] truncate">
-                  {session.user.name?.split(" ")[0]}
-                </span>
-              </div>
-
-              <form action={async () => {
-                "use server"
-                await signOut()
-              }}>
-                <button
-                  type="submit"
-                  className="text-text-muted hover:text-danger hover:bg-red-50 p-2 rounded-xl transition-all"
-                  title="Cerrar sesión"
-                >
-                  <LogOut className="h-4 w-4" />
-                </button>
-              </form>
-            </div>
+            <Link
+              href="/admin"
+              className="p-2 hover:bg-purple-50 rounded-xl transition-colors"
+              title="Panel de administración"
+            >
+              <Shield className="h-4 w-4 text-purple-600" />
+            </Link>
           ) : (
             <form action={async () => {
               "use server"

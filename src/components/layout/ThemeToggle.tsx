@@ -13,16 +13,39 @@ export function ThemeToggle() {
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
     const initialTheme = stored || (prefersDark ? "dark" : "light")
     setTheme(initialTheme)
-    document.documentElement.classList.remove("light", "dark")
-    document.documentElement.classList.add(initialTheme)
+    applyTheme(initialTheme)
   }, [])
+
+  const applyTheme = (t: string) => {
+    const root = document.documentElement
+    root.classList.remove("light", "dark")
+    root.classList.add(t)
+    if (t === "dark") {
+      root.style.setProperty("--bg-primary", "#1a1a1a")
+      root.style.setProperty("--bg-secondary", "#2d2d2d")
+      root.style.setProperty("--bg-card", "#333333")
+      root.style.setProperty("--text-primary", "#ffffff")
+      root.style.setProperty("--text-secondary", "#b0b0b0")
+      root.style.setProperty("--text-muted", "#888888")
+      root.style.setProperty("--accent-primary", "#60a5fa")
+      root.style.setProperty("--border", "#404040")
+    } else {
+      root.style.setProperty("--bg-primary", "#FDFBF7")
+      root.style.setProperty("--bg-secondary", "#F5F1EA")
+      root.style.setProperty("--bg-card", "#FFFFFF")
+      root.style.setProperty("--text-primary", "#1F1B16")
+      root.style.setProperty("--text-secondary", "#6B6459")
+      root.style.setProperty("--text-muted", "#A39E94")
+      root.style.setProperty("--accent-primary", "#3B82F6")
+      root.style.setProperty("--border", "#E8E4DD")
+    }
+  }
 
   const toggleTheme = () => {
     const newTheme = theme === "light" ? "dark" : "light"
     setTheme(newTheme)
     localStorage.setItem("theme", newTheme)
-    document.documentElement.classList.remove("light", "dark")
-    document.documentElement.classList.add(newTheme)
+    applyTheme(newTheme)
   }
 
   if (!mounted) return null
