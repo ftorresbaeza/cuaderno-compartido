@@ -4,6 +4,7 @@ import { SubjectList } from "@/components/subject/SubjectList"
 import { CourseDialogs } from "@/components/course/CourseDialogs"
 import { ShareButton } from "@/components/course/ShareButton"
 import { PushNotificationToggle } from "@/components/notifications/PushNotificationToggle"
+import { EventList } from "@/components/event/EventList"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, CheckCircle, AlertCircle, Star, Image, Users, Settings, LogIn } from "lucide-react"
 import { auth, signIn } from "@/auth"
@@ -191,33 +192,7 @@ export default async function CoursePage({
             <Calendar className="h-4 w-4" />
             {dateParam ? "Eventos para este día" : "Próximos eventos"}
           </h2>
-          <div className="space-y-2">
-            {course.events
-              .filter((e) => new Date(e.date) >= selectedDate)
-              .slice(0, 3)
-              .map((event) => {
-                const Icon = eventIcons[event.type]
-                return (
-                  <a
-                    key={event.id}
-                    href={`/${courseCode}/calendar?date=${new Date(event.date).toISOString().split('T')[0]}`}
-                    className="flex items-center gap-3 p-3 bg-bg-card rounded-xl border-2 border-border"
-                  >
-                    <div className={`p-2 rounded-lg ${eventColors[event.type]}`}>
-                      <Icon className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-text-primary truncate">
-                        {event.title}
-                      </p>
-                      <p className="text-xs text-text-muted">
-                        {format(new Date(event.date), "d 'de' MMM", { locale: es })}
-                      </p>
-                    </div>
-                  </a>
-                )
-              })}
-          </div>
+          <EventList events={course.events.filter((e) => new Date(e.date) >= selectedDate).slice(0, 3)} />
         </div>
       )}
     </div>
