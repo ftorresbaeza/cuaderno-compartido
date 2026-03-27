@@ -21,6 +21,10 @@ export const metadata: Metadata = {
   title: "Cuaderno Compartido",
   description: "Plataforma colaborativa para compartir apuntes escolares",
   manifest: "/manifest.json",
+  icons: {
+    icon: "/favicon.png",
+    apple: "/icon-192.png",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",

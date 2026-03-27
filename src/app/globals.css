@@ -17,6 +17,21 @@
   --border: #E8E4DD;
 }
 
+[data-theme="dark"] {
+  --bg-primary: #1a1a1a;
+  --bg-secondary: #2d2d2d;
+  --bg-card: #333333;
+  --text-primary: #ffffff;
+  --text-secondary: #b0b0b0;
+  --text-muted: #888888;
+  --accent-primary: #60a5fa;
+  --accent-secondary: #4ade80;
+  --accent-tertiary: #facc15;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --border: #404040;
+}
+
 @layer base {
   * {
     @apply border-border;

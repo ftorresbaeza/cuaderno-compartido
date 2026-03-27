@@ -2,6 +2,8 @@ import Link from "next/link"
 import { BookOpen, LogIn, LogOut, Shield } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { auth, signIn, signOut } from "@/auth"
+import { ThemeToggle } from "./ThemeToggle"
+import { NotificationBell } from "@/components/notifications/NotificationBell"
 
 const SUPER_ADMIN_EMAIL = "ftorresbaeza@gmail.com"
 
@@ -38,6 +40,8 @@ export async function Header({ courseName, courseCode }: HeaderProps) {
         </Link>
 
         <div className="flex items-center gap-2">
+          <ThemeToggle />
+          {courseCode && <NotificationBell courseCode={courseCode} />}
           {session?.user ? (
             <div className="flex items-center gap-2">
               {/* Link admin si es super admin */}

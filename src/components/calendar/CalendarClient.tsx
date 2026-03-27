@@ -5,7 +5,7 @@ import { CalendarView } from "@/components/calendar/CalendarView"
 import { DayPopover } from "@/components/calendar/DayPopover"
 import { CreateEventDialog } from "@/components/event/CreateEventDialog"
 import { Button } from "@/components/ui/button"
-import { Plus } from "lucide-react"
+import { Plus, Calendar as CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 
@@ -63,6 +63,7 @@ export function CalendarClient({
   const [events, setEvents] = useState(initialEvents)
   const [images, setImages] = useState(initialImages)
   const [editingEvent, setEditingEvent] = useState<EditEvent | null>(null)
+  const [quickDate, setQuickDate] = useState("")
 
   useEffect(() => {
     async function fetchData() {
@@ -198,10 +199,19 @@ export function CalendarClient({
     }
   }
 
+  const handleQuickDateChange = (dateStr: string) => {
+    setQuickDate(dateStr)
+    if (dateStr) {
+      const date = new Date(dateStr)
+      setCurrentMonth(new Date(date.getFullYear(), date.getMonth(), 1))
+      setSelectedDate(date)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex-1">
           <h1 className="text-xl font-display font-bold text-text-primary">
             Calendario
           </h1>
@@ -209,14 +219,22 @@ export function CalendarClient({
             {format(currentMonth, "MMMM yyyy", { locale: es })}
           </p>
         </div>
-        <Button
-          size="sm"
-          onClick={() => setShowEventDialog(true)}
-          className="gap-1"
-        >
-          <Plus className="h-4 w-4" />
-          Evento
-        </Button>
+        <div className="flex items-center gap-2">
+          <input
+            type="date"
+            value={quickDate}
+            onChange={(e) => handleQuickDateChange(e.target.value)}
+            className="px-3 py-2 border-2 border-border rounded-xl text-sm bg-bg-card"
+          />
+          <Button
+            size="sm"
+            onClick={() => setShowEventDialog(true)}
+            className="gap-1"
+          >
+            <Plus className="h-4 w-4" />
+            Evento
+          </Button>
+        </div>
       </div>
 
       <CalendarView
