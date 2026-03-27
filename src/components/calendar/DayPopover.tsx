@@ -1,6 +1,6 @@
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { CheckCircle, AlertCircle, Star, Image, Trash2, CalendarPlus } from "lucide-react"
+import { CheckCircle, AlertCircle, Star, Image, Trash2, CalendarPlus, Pencil } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface DayEvent {
@@ -11,6 +11,7 @@ interface DayEvent {
   subjectName?: string
   subjectId?: string
   createdBy?: string | null
+  date?: string
 }
 
 interface DaySummary {
@@ -27,6 +28,7 @@ interface DayPopoverProps {
   summary: DaySummary | null
   onClose: () => void
   onViewDay: () => void
+  onClickEvent: (event: DayEvent) => void
   onEditEvent?: (event: {
     id: string
     title: string
@@ -54,7 +56,7 @@ const eventColors = {
   ACTIVITY: "text-blue-600 bg-blue-50",
 }
 
-export function DayPopover({ summary, onClose, onViewDay, onEditEvent, onCreateEvent, onDeleteEvent, courseCode, currentUserId }: DayPopoverProps) {
+export function DayPopover({ summary, onClose, onViewDay, onClickEvent, onEditEvent, onCreateEvent, onDeleteEvent, courseCode, currentUserId }: DayPopoverProps) {
   if (!summary) return null
 
   const hasContent = summary.images.length > 0 || summary.events.length > 0
@@ -102,49 +104,54 @@ export function DayPopover({ summary, onClose, onViewDay, onEditEvent, onCreateE
                     Eventos
                   </h4>
                   <div className="space-y-2">
-                    {summary.events.map((event) => {
-                      const Icon = eventIcons[event.type]
-                      const canEdit = currentUserId && event.createdBy === currentUserId
+                    {summary.events.map((eventItem) => {
+                      const Icon = eventIcons[eventItem.type]
+                      const canEdit = currentUserId && eventItem.createdBy === currentUserId
                       return (
                         <div
-                          key={event.id}
-                          className="flex items-center gap-3 p-3 bg-bg-secondary rounded-xl"
+                          key={eventItem.id}
+                          className="flex items-center gap-3 p-3 bg-bg-secondary rounded-xl cursor-pointer hover:bg-bg-primary transition-colors"
+                          onClick={() => onClickEvent(eventItem)}
                         >
-                          <div className={`p-2 rounded-lg ${eventColors[event.type]}`}>
+                          <div className={`p-2 rounded-lg ${eventColors[eventItem.type]}`}>
                             <Icon className="h-4 w-4" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium text-text-primary truncate">
-                              {event.title}
+                              {eventItem.title}
                             </p>
-                            {event.subjectName && (
+                            {eventItem.subjectName && (
                               <p className="text-xs text-text-muted">
-                                {event.subjectName}
+                                {eventItem.subjectName}
                               </p>
                             )}
                           </div>
                           {canEdit && onEditEvent && (
                             <button
-                              onClick={() => onEditEvent({
-                                id: event.id,
-                                title: event.title,
-                                description: event.description || "",
-                                type: event.type,
-                                date: format(summary.date, "yyyy-MM-dd"),
-                                subjectName: event.subjectName,
-                                subjectId: event.subjectId,
-                              })}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onEditEvent({
+                                  id: eventItem.id,
+                                  title: eventItem.title,
+                                  description: eventItem.description || "",
+                                  type: eventItem.type,
+                                  date: format(summary.date, "yyyy-MM-dd"),
+                                  subjectName: eventItem.subjectName,
+                                  subjectId: eventItem.subjectId,
+                                })
+                              }}
                               className="p-2 text-text-muted hover:text-accent-primary transition-colors"
                               title="Editar"
                             >
-                              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                              </svg>
+                              <Pencil className="h-4 w-4" />
                             </button>
                           )}
                           {canEdit && onDeleteEvent && (
                             <button
-                              onClick={() => onDeleteEvent(event.id)}
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onDeleteEvent(eventItem.id)
+                              }}
                               className="p-2 text-text-muted hover:text-red-500 transition-colors"
                               title="Eliminar"
                             >

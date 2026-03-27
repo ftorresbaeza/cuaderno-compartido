@@ -65,7 +65,11 @@ export function EventList({ events, canEdit, subjects = [], courseId, courseCode
                   {event.title}
                 </p>
                 <p className="text-xs text-text-muted">
-                  {format(new Date(event.date), "d 'de' MMM", { locale: es })}
+                  {(() => {
+                    const d = new Date(event.date)
+                    const localDate = new Date(d.getTime() + d.getTimezoneOffset() * 60000)
+                    return format(localDate, "d 'de' MMM", { locale: es })
+                  })()}
                 </p>
               </div>
             </button>

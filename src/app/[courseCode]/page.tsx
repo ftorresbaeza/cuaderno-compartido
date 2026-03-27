@@ -38,10 +38,11 @@ export default async function CoursePage({
 
   const todayEvents = course.events.filter((e) => {
     const eventDate = new Date(e.date)
+    const localDate = new Date(eventDate.getTime() + eventDate.getTimezoneOffset() * 60000)
     return (
-      eventDate.getDate() === selectedDate.getDate() &&
-      eventDate.getMonth() === selectedDate.getMonth() &&
-      eventDate.getFullYear() === selectedDate.getFullYear()
+      localDate.getDate() === selectedDate.getDate() &&
+      localDate.getMonth() === selectedDate.getMonth() &&
+      localDate.getFullYear() === selectedDate.getFullYear()
     )
   })
 

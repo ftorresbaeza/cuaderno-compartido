@@ -180,6 +180,19 @@ export function CalendarClient({
     setShowEventDialog(true)
   }
 
+  const handleViewEvent = (event: any) => {
+    const dateStr = selectedDate ? selectedDate.toISOString().split("T")[0] : ""
+    setEditingEvent({
+      id: event.id,
+      title: event.title,
+      description: event.description || "",
+      type: event.type,
+      date: dateStr,
+      subjectId: event.subjectId,
+    })
+    setShowEventDialog(true)
+  }
+
   const handleCreateEvent = (date: Date) => {
     setEditingEvent(null)
     setSelectedDate(date)
@@ -260,6 +273,7 @@ export function CalendarClient({
           onViewDay={() => {
             window.location.href = `/${courseCode}?date=${selectedDate?.toISOString().split("T")[0]}`
           }}
+          onClickEvent={handleViewEvent}
           onEditEvent={handleEditEvent}
           onCreateEvent={handleCreateEvent}
           onDeleteEvent={handleDeleteEvent}
