@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { notFound } from "next/navigation"
 import { useRouter } from "next/navigation"
-import { getSubjectWithImages } from "@/actions/subject"
+import { getSubjectWithImages, getAuthSession } from "@/actions/subject"
 import { deleteImageAdmin, getThanksForImages } from "@/actions/image"
 import { ImageGrid } from "@/components/image/ImageGrid"
 import { Card, CardContent } from "@/components/ui/card"
@@ -11,7 +11,6 @@ import { BookOpen, Image, Calendar, X, Share2 } from "lucide-react"
 import { ChevronDown, Search } from "lucide-react"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { auth } from "@/auth"
 
 interface SubjectPageProps {
   params: Promise<{ courseCode: string; subjectId: string }>
@@ -35,7 +34,7 @@ export default function SubjectPage({ params, searchParams }: SubjectPageProps) 
       const [{ subjectId }, { image }] = await Promise.all([params, searchParams])
       const [data, authSession] = await Promise.all([
         getSubjectWithImages(subjectId),
-        auth(),
+        getAuthSession(),
       ])
       
       if (!mounted) return

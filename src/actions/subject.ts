@@ -4,6 +4,10 @@ import { prisma } from "@/lib/prisma"
 import { revalidatePath } from "next/cache"
 import { auth } from "@/auth"
 
+export async function getAuthSession() {
+  return auth()
+}
+
 export async function createSubject(courseId: string, name: string) {
   if (!name || name.trim().length === 0) {
     return { error: "El nombre de la asignatura es requerido" }
