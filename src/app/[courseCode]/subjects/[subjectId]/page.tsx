@@ -29,18 +29,24 @@ export default function SubjectPage({ params, searchParams }: SubjectPageProps) 
   const router = useRouter()
 
   useEffect(() => {
+    let mounted = true
+    
     async function loadData() {
       const [{ subjectId }, { image }] = await Promise.all([params, searchParams])
       const [data, authSession] = await Promise.all([
         getSubjectWithImages(subjectId),
         auth(),
       ])
+      
+      if (!mounted) return
+      
       setSubjectData(data)
       setSession(authSession)
       
       if (data.subject && data.images.length > 0) {
         const imageIds = data.images.map((img) => img.id)
         const thanks = await getThanksForImages(imageIds, authSession?.user?.id)
+        if (!mounted) return
         setThanksData(thanks)
       }
       
@@ -51,7 +57,9 @@ export default function SubjectPage({ params, searchParams }: SubjectPageProps) 
       setIsLoading(false)
     }
     loadData()
-  }, [params, searchParams])
+    
+    return () => { mounted = false }
+  }, [])
 
   if (isLoading) {
     return <div className="p-8 text-center text-text-muted">Cargando...</div>
