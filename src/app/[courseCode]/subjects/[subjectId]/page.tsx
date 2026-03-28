@@ -30,13 +30,17 @@ export default function SubjectPage({ params, searchParams }: SubjectPageProps) 
 
   const handleShareSubject = async () => {
     const url = window.location.href.split("?")[0]
+    const subjectName = subjectData?.subject?.name ?? "Asignatura"
+    const courseName = subjectData?.subject?.course?.name ?? ""
+    const imageCount = subjectData?.totalImages ?? 0
+    const text = `${subjectName} — ${imageCount} ${imageCount === 1 ? "imagen" : "imágenes"} en ${courseName}`
     if (navigator.share) {
       try {
-        await navigator.share({ title: subjectData?.subject?.name ?? "Asignatura", url })
+        await navigator.share({ title: subjectName, text, url })
         return
       } catch {}
     }
-    await navigator.clipboard.writeText(url)
+    await navigator.clipboard.writeText(`${text}\n${url}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
