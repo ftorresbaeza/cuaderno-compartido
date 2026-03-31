@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { X, ZoomIn, ZoomOut, Calendar as CalendarIcon, ChevronRight, ChevronDown, ChevronLeft, Trash2, Heart, RotateCw } from "lucide-react"
+import { X, ZoomIn, ZoomOut, Calendar as CalendarIcon, ChevronRight, ChevronDown, ChevronLeft, Trash2, Heart, RotateCw, Download } from "lucide-react"
 import { format, isToday, isYesterday } from "date-fns"
 import { es } from "date-fns/locale"
 import { sendThanks, rotateImage } from "@/actions/image"
@@ -64,6 +64,7 @@ export function ImageGrid({ images, isLoading, currentUserId, thanksData, onDele
   )
   const [rotating, setRotating] = useState(false)
   const [localRotation, setLocalRotation] = useState<Record<string, number>>({})
+  const [downloading, setDownloading] = useState(false)
   const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
   const touchStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null)
   const pinchStartDist = useRef<number | null>(null)
@@ -133,6 +134,28 @@ export function ImageGrid({ images, isLoading, currentUserId, thanksData, onDele
     setZoom(1)
     setPan({ x: 0, y: 0 })
   }, [])
+
+  const handleDownload = useCallback(async () => {
+    if (!selectedImage || downloading) return
+    setDownloading(true)
+    try {
+      const response = await fetch(selectedImage.url)
+      const blob = await response.blob()
+      const blobUrl = URL.createObjectURL(blob)
+      const a = document.createElement("a")
+      const dateStr = new Date(selectedImage.date).toISOString().split("T")[0]
+      a.href = blobUrl
+      a.download = `apunte-${dateStr}.jpg`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(blobUrl)
+    } catch {
+      window.open(selectedImage.url, "_blank")
+    } finally {
+      setDownloading(false)
+    }
+  }, [selectedImage, downloading])
 
   const handleRotate = useCallback(async () => {
     if (!selectedImage || rotating) return
@@ -476,6 +499,14 @@ export function ImageGrid({ images, isLoading, currentUserId, thanksData, onDele
                   className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-30"
                 >
                   <RotateCw className={cn("h-5 w-5 text-white", rotating && "animate-spin")} />
+                </button>
+                <button
+                  onClick={handleDownload}
+                  disabled={downloading}
+                  title="Descargar imagen"
+                  className="p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors disabled:opacity-30"
+                >
+                  <Download className={cn("h-5 w-5 text-white", downloading && "animate-pulse")} />
                 </button>
                 {zoom > 1 && (
                   <span className="text-white/70 text-xs font-medium px-2 py-1 rounded-full bg-black/40">
