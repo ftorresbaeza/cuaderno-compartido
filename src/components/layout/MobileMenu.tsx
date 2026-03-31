@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Menu, X, Moon, Sun, Calendar, Users, Trophy, Settings, Upload, BookOpen, LogOut } from "lucide-react"
-import { signOut } from "@/auth"
+import { signOut } from "next-auth/react"
 
 interface MobileMenuProps {
   courseCode?: string
