@@ -41,8 +41,14 @@ export function UploadDropzone({ courseCode, courseId, subjects, initialDate, in
     const newFiles = [...files, ...selectedFiles].slice(0, 10)
     setFiles(newFiles)
 
-    const newPreviews = newFiles.map((file) => URL.createObjectURL(file))
-    setPreviews(newPreviews)
+    // Solo crear previsualizaciones para los nuevos archivos, no recrear las antiguas
+    const newPreviews = selectedFiles.map((file) => URL.createObjectURL(file))
+    setPreviews((prev) => [...prev, ...newPreviews].slice(0, 10))
+
+    // Limpiar el input para permitir capturar el mismo archivo nuevamente
+    if (e.target) {
+      e.target.value = ""
+    }
   }, [files])
 
   const removeFile = (index: number) => {
@@ -65,7 +71,7 @@ export function UploadDropzone({ courseCode, courseId, subjects, initialDate, in
       const formData = new FormData()
       formData.append("subjectId", selectedSubject)
       formData.append("date", selectedDate)
-      
+
       for (let i = 0; i < files.length; i++) {
         const compressed = await compressImage(files[i])
         const blob = new File([compressed], files[i].name, { type: "image/jpeg" })
@@ -77,11 +83,18 @@ export function UploadDropzone({ courseCode, courseId, subjects, initialDate, in
         body: formData,
       })
 
-      if (!response.ok) throw new Error("Error uploading")
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Error uploading")
+      }
 
       setUploadProgress(100)
       toast({ title: "Éxito", description: `${files.length} imágenes subidas` })
-      
+
+      // Limpiar estado
+      setFiles([])
+      setPreviews([])
+
       setTimeout(() => {
         router.push(`/${courseCode}/subjects/${selectedSubject}`)
       }, 1000)
@@ -124,6 +137,7 @@ export function UploadDropzone({ courseCode, courseId, subjects, initialDate, in
                 <p className="text-text-secondary font-semibold text-sm leading-tight">Tomar<br/>Foto</p>
               </div>
               <input
+                key="camera-input"
                 type="file"
                 accept="image/*"
                 capture="environment"
@@ -138,6 +152,7 @@ export function UploadDropzone({ courseCode, courseId, subjects, initialDate, in
                 <p className="text-text-secondary font-semibold text-sm leading-tight">Desde<br/>Galería</p>
               </div>
               <input
+                key="gallery-input"
                 type="file"
                 accept="image/*"
                 multiple
