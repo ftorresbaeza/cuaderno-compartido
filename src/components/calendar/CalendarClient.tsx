@@ -300,6 +300,12 @@ export function CalendarClient({
           date: editingEvent.date,
           subjectId: editingEvent.subjectId,
         } : undefined}
+        onEventCreated={(newEvent) => {
+          setEvents([...events, newEvent])
+        }}
+        onEventUpdated={(updatedEvent) => {
+          setEvents(events.map(e => e.id === updatedEvent.id ? updatedEvent : e))
+        }}
       />
     </div>
   )

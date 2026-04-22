@@ -31,6 +31,8 @@ interface CreateEventDialogProps {
     date: string
     subjectId?: string
   }
+  onEventCreated?: (event: any) => void
+  onEventUpdated?: (event: any) => void
 }
 
 const eventTypes: { type: EventType; label: string; icon: typeof CheckCircle }[] = [
@@ -47,6 +49,8 @@ export function CreateEventDialog({
   subjects,
   defaultDate,
   editEvent,
+  onEventCreated,
+  onEventUpdated,
 }: CreateEventDialogProps) {
   const isEditing = !!editEvent
   
@@ -106,6 +110,24 @@ export function CreateEventDialog({
       toast({ title: "Error", description: result.error, variant: "destructive" })
     } else {
       toast({ title: "Éxito", description: isEditing ? "Evento actualizado" : "Evento creado correctamente" })
+
+      if (result.event) {
+        const formattedEvent = {
+          id: result.event.id,
+          title: result.event.title,
+          type: result.event.type,
+          date: result.event.date.toISOString(),
+          subject: result.event.subject ? { id: result.event.subject.id, name: result.event.subject.name } : undefined,
+          createdBy: result.event.createdBy,
+        }
+
+        if (isEditing) {
+          onEventUpdated?.(formattedEvent)
+        } else {
+          onEventCreated?.(formattedEvent)
+        }
+      }
+
       setTitle("")
       setDescription("")
       setType("TASK")
