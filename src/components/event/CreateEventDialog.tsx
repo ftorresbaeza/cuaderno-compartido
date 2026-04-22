@@ -112,12 +112,13 @@ export function CreateEventDialog({
       toast({ title: "Éxito", description: isEditing ? "Evento actualizado" : "Evento creado correctamente" })
 
       if (result.event) {
+        const eventWithRelations = result.event as any
         const formattedEvent = {
           id: result.event.id,
           title: result.event.title,
           type: result.event.type,
           date: result.event.date.toISOString(),
-          subject: result.event.subject ? { id: result.event.subject.id, name: result.event.subject.name } : undefined,
+          subject: eventWithRelations.subject ? { id: eventWithRelations.subject.id, name: eventWithRelations.subject.name } : undefined,
           createdBy: result.event.createdBy,
         }
 
